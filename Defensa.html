@@ -1,0 +1,1651 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Defensa Tesis - Francisco Dos Santos Borges</title>
+    
+    <!-- Fuentes: Inter para legibilidad, Merriweather para toques académicos -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Merriweather:ital,wght@0,300;0,700;1,300&display=swap" rel="stylesheet">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        unsblue: '#1e3a5f',
+                        unsaccent: '#2c538a',
+                        unslight: '#f0f4f8'
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        serif: ['Merriweather', 'serif'],
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body {
+            background-color: #e2e8f0;
+            background-image: radial-gradient(#cbd5e1 1px, transparent 1px);
+            background-size: 20px 20px;
+            margin: 0;
+            overflow: hidden;
+        }
+        
+        .slides-container {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .slide {
+            position: absolute;
+            width: 90%;
+            max-width: 1100px;
+            height: 80vh;
+            background: #ffffff;
+            border-radius: 24px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.15);
+            opacity: 0;
+            visibility: hidden;
+            transform: scale(0.95) translateY(20px);
+            transition: all 0.7s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .slide.active {
+            opacity: 1;
+            visibility: visible;
+            transform: scale(1) translateY(0);
+            z-index: 10;
+        }
+
+        /* Elemento de diseño de "Canva" estilo abstracto */
+        .canva-shape {
+            position: absolute;
+            top: -50px;
+            right: -50px;
+            width: 300px;
+            height: 300px;
+            background: linear-gradient(135deg, #1e3a5f 0%, #2c538a 100%);
+            border-radius: 50%;
+            opacity: 0.1;
+            z-index: 0;
+        }
+
+        .slide-content-wrapper {
+            position: relative;
+            z-index: 1;
+            padding: 4rem 5rem;
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .cover-slide {
+            background: linear-gradient(135deg, #1e3a5f 0%, #0f1c2e 100%);
+            color: white;
+            text-align: center;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .slide-title {
+            font-family: 'Merriweather', serif;
+            color: #1e3a5f;
+            border-bottom: 3px solid #2c538a;
+            padding-bottom: 0.5rem;
+            margin-bottom: 2rem;
+            display: inline-block;
+        }
+
+        .card-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.5rem;
+            margin-top: 1.5rem;
+        }
+
+        .info-card {
+            background: #f8fafc;
+            border-left: 4px solid #2c538a;
+            padding: 1.5rem;
+            border-radius: 0 12px 12px 0;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+        }
+
+        .metric-card {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            padding: 1rem;
+            border-radius: 12px;
+            text-align: center;
+        }
+
+        .source-note {
+            color: #64748b;
+            font-size: 0.75rem;
+            margin-top: 1rem;
+        }
+
+        .thesis-figure {
+            display: block;
+            width: 100%;
+            object-fit: contain;
+            border-radius: 0.75rem;
+            border: 1px solid #e2e8f0;
+            background: #ffffff;
+        }
+
+        .thesis-figure-caption {
+            color: #64748b;
+            font-size: 0.7rem;
+            line-height: 1.25;
+            margin-top: 0.4rem;
+        }
+
+        .thesis-figure-compact {
+            max-height: 9rem;
+        }
+
+        .chapter5-results .thesis-figure {
+            max-height: 10rem;
+        }
+
+        .intro-slide .card-grid {
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        @media (max-width: 900px) {
+            .intro-slide .slide-content-wrapper {
+                padding: 2rem 3rem;
+            }
+
+            .intro-slide .card-grid {
+                grid-template-columns: repeat(3, minmax(0, 1fr));
+            }
+
+            .intro-slide .info-card {
+                padding: 0.75rem;
+            }
+
+            .dataset-slide .slide-content-wrapper {
+                padding: 1.25rem 2rem;
+                justify-content: flex-start;
+            }
+
+            .dataset-slide .dataset-flow {
+                flex-direction: row;
+                gap: 0.75rem;
+                margin-bottom: 0.6rem;
+            }
+
+            .dataset-slide .dataset-flow > div {
+                padding: 0.55rem;
+            }
+
+            .dataset-slide .slide-title {
+                margin-bottom: 0.5rem;
+            }
+
+            .dataset-slide > .slide-content-wrapper > p.text-xl {
+                margin-bottom: 0.75rem;
+                font-size: 1rem;
+                line-height: 1.3;
+            }
+
+            .dataset-slide ul {
+                line-height: 1.25;
+            }
+
+            .dataset-slide figure {
+                margin-top: 0.45rem;
+                padding: 0.35rem;
+            }
+
+            .dataset-slide figure .thesis-figure {
+                width: 100%;
+                height: 10rem;
+                object-fit: contain;
+            }
+
+            .dataset-slide .dataset-flow > div:nth-child(2) svg {
+                transform: rotate(0deg);
+            }
+
+            .dataset-slide ul {
+                gap: 0.4rem;
+                font-size: 0.9rem;
+            }
+
+            .dataset-slide .dataset-flow p.text-4xl {
+                font-size: 1.8rem;
+                line-height: 1.1;
+            }
+
+            .dataset-slide .source-note {
+                margin-top: 0.35rem;
+            }
+
+            .dataset-slide .curado-layout,
+            .dataset-slide .perfil-layout {
+                align-items: stretch;
+            }
+
+            .dataset-slide .curado-layout > *,
+            .dataset-slide .perfil-layout > * {
+                min-width: 0;
+            }
+
+            .dataset-slide .curado-layout figure .thesis-figure,
+            .dataset-slide .perfil-layout figure .thesis-figure {
+                width: 100%;
+                height: 13rem;
+                object-fit: contain;
+            }
+
+            .dataset-slide .curado-layout figure {
+                grid-column: span 2 / span 2;
+                min-width: 0;
+            }
+
+            .dataset-slide .perfil-layout .info-card {
+                margin-top: 0.5rem;
+            }
+
+            .dataset-slide .perfil-layout > div > .grid {
+                gap: 0.6rem;
+            }
+
+            .dataset-slide .perfil-layout .bg-unslight {
+                padding: 0.65rem;
+            }
+
+            .dataset-slide .perfil-layout h3 {
+                margin-bottom: 0.4rem;
+            }
+
+            .dataset-slide .perfil-layout li,
+            .dataset-slide .perfil-layout .info-card p {
+                font-size: 0.9rem;
+                line-height: 1.2;
+            }
+
+            .dataset-slide .perfil-layout figure .thesis-figure {
+                height: 10rem;
+            }
+
+            .profile-slide .slide-content-wrapper {
+                padding-top: 0.45rem;
+                padding-bottom: 0.45rem;
+            }
+
+            .profile-slide .perfil-layout {
+                align-items: stretch;
+            }
+
+            .profile-slide .perfil-layout > * {
+                min-width: 0;
+            }
+
+            .profile-slide .perfil-layout > div > .grid {
+                gap: 0.6rem;
+            }
+
+            .profile-slide .perfil-layout .bg-unslight {
+                padding: 0.45rem;
+            }
+
+            .profile-slide .perfil-layout h3 {
+                margin-bottom: 0.4rem;
+            }
+
+            .profile-slide .perfil-layout li,
+            .profile-slide .perfil-layout .info-card p {
+                font-size: 0.78rem;
+                line-height: 1.08;
+            }
+
+            .profile-slide .perfil-layout .info-card {
+                margin-top: 0.35rem;
+                padding: 0.45rem;
+            }
+
+            .profile-slide .perfil-layout figure .thesis-figure {
+                width: 100%;
+                height: 8rem;
+                object-fit: contain;
+            }
+
+            .compact-slide .slide-content-wrapper {
+                padding: 1.25rem 2rem;
+                justify-content: flex-start;
+            }
+
+            .compact-slide .slide-title {
+                margin-bottom: 0.75rem;
+                padding-bottom: 0.3rem;
+            }
+
+            .compact-slide .card-grid,
+            .compact-slide .grid.md\:grid-cols-2 {
+                gap: 1rem;
+            }
+
+            .compact-slide .bg-unslight,
+            .compact-slide .info-card,
+            .compact-slide .border-gray-200.rounded-xl {
+                padding: 0.75rem;
+            }
+
+            .compact-slide .p-6 {
+                padding: 1rem;
+            }
+
+            .compact-slide .mb-6 {
+                margin-bottom: 0.75rem;
+            }
+
+            .compact-slide .mt-5 {
+                margin-top: 0.75rem;
+            }
+
+            .compact-slide p.text-lg,
+            .compact-slide li.text-lg {
+                font-size: 1rem;
+                line-height: 1.45;
+            }
+
+            .compact-slide .bg-unsblue.p-6 {
+                padding: 1rem;
+                margin-bottom: 1rem;
+            }
+
+            .compact-slide .space-y-6 {
+                row-gap: 1rem;
+            }
+
+            .compact-slide .text-2xl {
+                font-size: 1.25rem;
+                line-height: 1.35;
+            }
+
+            .imbalance-slide .slide-content-wrapper {
+                padding: 1.25rem 2rem;
+            }
+
+            .imbalance-slide .slide-title {
+                margin-bottom: 0.6rem;
+                padding-bottom: 0.3rem;
+            }
+
+            .imbalance-slide p.text-lg {
+                margin-bottom: 0.75rem;
+                line-height: 1.25;
+            }
+
+            .imbalance-slide .grid {
+                gap: 0.6rem;
+                margin-bottom: 0.75rem;
+            }
+
+            .imbalance-slide .grid.grid-cols-2 {
+                grid-template-columns: 1.2fr 0.8fr;
+            }
+
+            .imbalance-slide .metric-card,
+            .imbalance-slide .bg-unslight,
+            .imbalance-slide .bg-red-50 {
+                padding: 0.7rem;
+            }
+
+            .imbalance-slide h3 {
+                margin-bottom: 0.5rem;
+                font-size: 1.1rem;
+            }
+
+            .imbalance-slide ul {
+                line-height: 1.25;
+            }
+
+            .imbalance-slide .bg-unslight .thesis-figure {
+                width: 100%;
+                height: 12rem;
+                object-fit: contain;
+            }
+
+            .imbalance-slide .thesis-figure-caption {
+                font-size: 0.75rem;
+                line-height: 1.2;
+                margin-top: 0.35rem;
+            }
+
+            .imbalance-slide .source-note {
+                margin-top: 0.6rem;
+            }
+
+            .retrieval-model-slide .slide-content-wrapper {
+                padding-top: 1rem;
+                padding-bottom: 1rem;
+            }
+
+            .retrieval-model-slide .retrieval-layout {
+                align-items: stretch;
+            }
+
+            .retrieval-model-slide .retrieval-layout > div,
+            .retrieval-model-slide .retrieval-layout > figure {
+                min-width: 0;
+            }
+
+            .retrieval-model-slide .bg-unslight {
+                margin-bottom: 0.5rem;
+            }
+
+            .retrieval-model-slide .info-card {
+                margin-top: 0.5rem;
+            }
+
+            .retrieval-model-slide figure {
+                margin-top: 0.75rem;
+                padding: 0.5rem;
+            }
+
+            .retrieval-model-slide figure .thesis-figure {
+                width: 100%;
+                height: 18rem;
+                object-fit: contain;
+            }
+
+            .retrieval-model-slide .bg-unslight {
+                padding: 0.6rem;
+            }
+
+            .retrieval-model-slide .bg-unslight h3 {
+                margin-bottom: 0.4rem;
+            }
+
+            .retrieval-model-slide .bg-unslight p,
+            .retrieval-model-slide .bg-unslight li {
+                font-size: 0.9rem;
+                line-height: 1.2;
+            }
+
+            .retrieval-model-slide .bg-unslight p {
+                margin-bottom: 0.45rem;
+            }
+
+            .retrieval-model-slide .bg-unslight ul {
+                margin-left: 1.25rem;
+            }
+
+            .retrieval-model-slide .info-card p {
+                font-size: 0.9rem;
+                line-height: 1.2;
+            }
+
+            .retrieval-model-slide .info-card {
+                padding: 0.6rem;
+            }
+
+            .retrieval-model-slide .thesis-figure-caption {
+                font-size: 0.75rem;
+                line-height: 1.2;
+                margin-top: 0.35rem;
+            }
+
+            .generation-evaluation-slide figure {
+                margin-top: 0.75rem;
+                padding: 0.5rem;
+            }
+
+            .generation-evaluation-slide figure .thesis-figure {
+                max-height: 3rem;
+            }
+
+            .generation-evaluation-slide .slide-content-wrapper {
+                padding-top: 0.85rem;
+                padding-bottom: 0.85rem;
+            }
+
+            .generation-evaluation-slide .grid {
+                gap: 0.6rem;
+            }
+
+            .generation-evaluation-slide .bg-unslight {
+                padding: 0.65rem;
+            }
+
+            .generation-evaluation-slide .bg-unslight h3 {
+                margin-bottom: 0.35rem;
+            }
+
+            .generation-evaluation-slide .bg-unslight li {
+                line-height: 1.2;
+            }
+
+            .generation-evaluation-slide .bg-blue-50 {
+                padding: 0.6rem;
+            }
+
+            .generation-evaluation-slide .generation-layout {
+                align-items: stretch;
+            }
+
+            .generation-evaluation-slide .generation-layout > div {
+                min-width: 0;
+            }
+
+            .generation-evaluation-slide .generation-figure {
+                min-height: 13rem;
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+            }
+
+            .generation-evaluation-slide .generation-figure .thesis-figure {
+                width: 100%;
+                height: auto;
+                object-fit: contain;
+                max-height: 11rem;
+            }
+
+            .generation-evaluation-slide .generation-layout li {
+                line-height: 1.15;
+            }
+
+            .generation-evaluation-slide .generation-layout h3 {
+                margin-bottom: 0.3rem;
+            }
+
+            .generation-evaluation-slide .bg-blue-50 {
+                font-size: 0.8rem;
+            }
+
+            .training-slide .slide-content-wrapper {
+                padding-top: 0.6rem;
+                padding-bottom: 0.6rem;
+            }
+
+            .training-slide .bg-blue-50 {
+                padding: 0.45rem;
+            }
+
+            .training-slide .space-y-4 {
+                row-gap: 0.35rem;
+            }
+
+            .training-slide .space-y-4 > div {
+                padding-top: 0.45rem;
+                padding-bottom: 0.45rem;
+            }
+
+            .ssl-slide .slide-content-wrapper,
+            .binary-results-slide .slide-content-wrapper,
+            .multilabel-results-slide .slide-content-wrapper {
+                padding-top: 0.75rem;
+                padding-bottom: 0.75rem;
+            }
+
+            .ssl-slide .metric-card,
+            .binary-results-slide .metric-card,
+            .multilabel-results-slide .metric-card {
+                padding: 0.55rem;
+            }
+
+            .binary-results-slide figure,
+            .multilabel-results-slide figure {
+                margin-top: 0.5rem;
+                padding: 0.35rem;
+            }
+
+            .binary-results-slide figure .thesis-figure {
+                max-height: 4.2rem;
+            }
+
+            .multilabel-results-slide figure .thesis-figure {
+                max-height: 4.5rem;
+            }
+
+            .ssl-slide .grid,
+            .binary-results-slide .grid,
+            .multilabel-results-slide .grid {
+                gap: 0.55rem;
+            }
+
+            .ssl-slide .source-note,
+            .binary-results-slide .source-note,
+            .multilabel-results-slide .source-note {
+                margin-top: 0.45rem;
+            }
+
+            .conclusions-slide .slide-content-wrapper {
+                padding-top: 1rem;
+                padding-bottom: 1rem;
+            }
+
+            .conclusions-slide .grid {
+                gap: 0.6rem;
+            }
+
+            .conclusions-slide .grid > div {
+                padding: 0.7rem;
+            }
+
+            .conclusions-slide .bg-unsblue {
+                padding: 0.75rem;
+                margin-top: 0.7rem;
+            }
+
+            .zero-shot-results-slide .slide-content-wrapper {
+                padding-top: 0.75rem;
+                padding-bottom: 0.75rem;
+            }
+
+            .zero-shot-results-slide .slide-title {
+                margin-bottom: 0.6rem;
+            }
+
+            .zero-shot-results-slide p.text-lg {
+                margin-bottom: 0.75rem;
+                line-height: 1.25;
+            }
+
+            .zero-shot-results-slide .grid {
+                gap: 0.5rem;
+                margin-top: 0.5rem;
+            }
+
+            .zero-shot-results-slide .grid > div {
+                padding: 0.55rem;
+            }
+
+            .zero-shot-results-slide h3 {
+                margin-bottom: 0.35rem;
+            }
+
+            .zero-shot-results-slide .source-note {
+                margin-top: 0.4rem;
+            }
+
+            .zero-shot-results-slide table th,
+            .zero-shot-results-slide table td {
+                padding-top: 0.35rem;
+                padding-bottom: 0.35rem;
+            }
+        }
+
+        /* Barra inferior del frame */
+        .presentation-controls {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(10px);
+            padding: 0.75rem 1.5rem;
+            border-radius: 50px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+            z-index: 100;
+        }
+
+        button:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+        }
+    </style>
+</head>
+<body>
+
+    <main class="slides-container" id="slides-container">
+
+        <!-- Slide 1: Portada (Cover) -->
+        <article class="slide cover-slide active">
+            <div class="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-10"></div>
+            <div class="relative z-10 w-full px-12">
+                <p class="text-blue-300 font-semibold tracking-widest uppercase mb-4 text-sm md:text-base">Defensa de Tesis de Licenciatura en Física</p>
+                <h1 class="font-serif text-3xl md:text-5xl font-bold leading-tight mb-8">
+                    Generación automática de informes radiológicos de tórax a partir de radiografías DICOM y metadatos asociados usando IA
+                </h1>
+                <div class="w-24 h-1 bg-blue-400 mx-auto mb-8 rounded-full"></div>
+                
+                <h2 class="text-xl md:text-2xl font-light mb-2">Autor: <span class="font-semibold">Francisco Dos Santos Borges</span></h2>
+                <h3 class="text-lg md:text-xl text-gray-300 mb-12">Directores: Dr. Nicolás García, Dra. Anabella Abate</h3>
+                
+                <div class="mt-8 pt-6 border-t border-blue-800/50">
+                    <p class="text-sm text-blue-200 tracking-wider">UNIVERSIDAD NACIONAL DEL SUR • 2026</p>
+                </div>
+            </div>
+        </article>
+
+        <!-- Slide 2: Introducción y Motivación -->
+        <article class="slide intro-slide">
+            <div class="canva-shape"></div>
+            <div class="slide-content-wrapper">
+                <h2 class="text-4xl slide-title font-bold">Introducción y Motivación</h2>
+                <p class="text-xl text-gray-600 mb-6">El potencial de los Modelos de Visión y Lenguaje (VLMs) en medicina enfrenta barreras estructurales para su transferencia clínica directa.</p>
+                
+                <div class="card-grid">
+                    <div class="info-card">
+                        <div class="text-unsaccent mb-2">
+                            <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064"></path></svg>
+                        </div>
+                        <h3 class="text-lg font-bold text-unsblue mb-2">Desajuste de Dominio (Domain Shift)</h3>
+                        <p class="text-gray-700">Pérdida de rendimiento al aplicar modelos globales sobre instrumental y poblaciones locales.</p>
+                    </div>
+                    <div class="info-card">
+                        <div class="text-unsaccent mb-2">
+                            <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"></path></svg>
+                        </div>
+                        <h3 class="text-lg font-bold text-unsblue mb-2">Falta de Etiquetas Locales</h3>
+                        <p class="text-gray-700">Dificultad de obtener anotaciones expertas a gran escala y exigencias de privacidad en los datos.</p>
+                    </div>
+                    <div class="info-card">
+                        <div class="text-unsaccent mb-2">
+                            <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
+                        </div>
+                        <h3 class="text-lg font-bold text-unsblue mb-2">Limitaciones en Salidas Rígidas</h3>
+                        <p class="text-gray-700">Restringir a los VLMs a esquemas cerrados (JSON/Categorías) degrada severamente su razonamiento.</p>
+                    </div>
+                </div>
+            </div>
+        </article>
+
+        <!-- Slide 3: Pregunta y estrategia -->
+        <article class="slide compact-slide">
+            <div class="canva-shape" style="top: auto; bottom: -50px; right: auto; left: -50px;"></div>
+            <div class="slide-content-wrapper">
+                <h2 class="text-4xl slide-title font-bold">Pregunta de investigación</h2>
+                <div class="bg-unsblue text-white p-6 rounded-xl shadow-lg mb-6">
+                    <p class="text-2xl font-serif italic text-center leading-relaxed">
+                        ¿Puede un pipeline basado en inteligencia artificial generar informes radiológicos a partir de radiografías?
+                    </p>
+                </div>
+                <div class="grid grid-cols-3 gap-4">
+                    <div class="metric-card">
+                        <p class="text-3xl font-bold text-unsblue">01</p>
+                        <h3 class="font-bold text-unsblue mt-2">Auditar</h3>
+                        <p class="text-gray-600 text-sm mt-1">Convertir un repositorio heterogéneo en una referencia reproducible.</p>
+                    </div>
+                    <div class="metric-card">
+                        <p class="text-3xl font-bold text-unsblue">02</p>
+                        <h3 class="font-bold text-unsblue mt-2">Evaluar</h3>
+                        <p class="text-gray-600 text-sm mt-1">Medir qué se transfiere y qué falla en modelos preentrenados.</p>
+                    </div>
+                    <div class="metric-card">
+                        <p class="text-3xl font-bold text-unsblue">03</p>
+                        <h3 class="font-bold text-unsblue mt-2">Integrar</h3>
+                        <p class="text-gray-600 text-sm mt-1">Construir un prototipo CAD modular, trazable y asistido.</p>
+                    </div>
+                </div>
+            </div>
+        </article>
+
+        <!-- Slide 5: Curado y balanceo -->
+        <article class="slide dataset-slide">
+            <div class="canva-shape"></div>
+            <div class="slide-content-wrapper">
+                <h2 class="text-4xl slide-title font-bold">Curado y balanceo semántico</h2>
+                <p class="text-xl text-gray-600 mb-6">Después de la auditoría, el texto clínico se convirtió en una referencia evaluable y menos sesgada.</p>
+
+                <div class="grid grid-cols-5 gap-4 curado-layout">
+                    <div class="col-span-3">
+                <div class="dataset-flow flex flex-col md:flex-row justify-between items-center gap-4 mb-5">
+                    <div class="bg-white border border-gray-200 shadow-md p-6 rounded-xl flex-1 text-center w-full">
+                        <p class="text-4xl font-bold text-unsblue mb-2">6.123</p>
+                        <p class="text-gray-500 uppercase text-sm font-semibold">informes válidos</p>
+                    </div>
+                    <div class="text-gray-400">
+                        <svg class="w-8 h-8 rotate-90 md:rotate-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
+                    </div>
+                    <div class="bg-white border border-gray-200 shadow-md p-6 rounded-xl flex-1 text-center w-full">
+                        <p class="text-4xl font-bold text-green-600 mb-2">2.818</p>
+                        <p class="text-gray-500 uppercase text-sm font-semibold">casos balanceados</p>
+                    </div>
+                </div>
+
+                <ul class="space-y-3 text-lg text-gray-700 ml-4 list-none">
+                    <li class="flex items-start gap-3">
+                        <span class="text-unsaccent mt-1">✔</span>
+                        <span><strong>Estandarización:</strong> traducción al inglés, eliminación de títulos, matrículas, nombres y secciones anatómicas no torácicas.</span>
+                    </li>
+                    <li class="flex items-start gap-3">
+                        <span class="text-unsaccent mt-1">✔</span>
+                        <span><strong>DBSCAN:</strong> embeddings <em>all-MiniLM-L6-v2</em>, distancia coseno, ε = 0,04 y 100 clústeres; el mayor concentraba más del 50 %.</span>
+                    </li>
+                    <li class="flex items-start gap-3">
+                        <span class="text-unsaccent mt-1">✔</span>
+                        <span><strong>Submuestreo:</strong> máximo de 500 casos por clúster; la cohorte final contiene 2.818 pacientes y 4.289 radiografías.</span>
+                    </li>
+                </ul>
+                    </div>
+                    <figure class="col-span-2 rounded-xl border border-gray-200 bg-white p-3 flex flex-col justify-center">
+                        <img class="thesis-figure" src="Tesis/Torta clusters.png" alt="Distribución de informes en clústeres semánticos DBSCAN">
+                        <figcaption class="thesis-figure-caption">DBSCAN evidencia el sesgo del corpus: un clúster de informes de rutina concentra más de la mitad de los casos.</figcaption>
+                    </figure>
+                </div>
+                <p class="source-note">Las 14.132 imágenes sin etiqueta se reservaron para adaptación SSL, no para esta evaluación textual.</p>
+            </div>
+        </article>
+
+        <!-- Slide 5: Auditoría del repositorio -->
+        <article class="slide compact-slide">
+            <div class="canva-shape"></div>
+            <div class="slide-content-wrapper">
+                <h2 class="text-4xl slide-title font-bold">Auditoría del repositorio</h2>
+                <p class="text-xl text-gray-600 mb-5">El valor del modelo depende primero de la calidad y trazabilidad del dato clínico.</p>
+                <div class="grid grid-cols-4 gap-4 mb-5">
+                    <div class="metric-card"><p class="text-3xl font-bold text-unsblue">16.541</p><p class="text-sm text-gray-500 uppercase">expedientes crudos</p></div>
+                    <div class="metric-card"><p class="text-3xl font-bold text-orange-600">7.290</p><p class="text-sm text-gray-500 uppercase">con informe textual</p></div>
+                    <div class="metric-card"><p class="text-3xl font-bold text-green-600">6.123</p><p class="text-sm text-gray-500 uppercase">estudios torácicos válidos</p></div>
+                    <div class="metric-card"><p class="text-3xl font-bold text-unsaccent">39.283</p><p class="text-sm text-gray-500 uppercase">radiografías de tórax en el dataset</p></div>
+                </div>
+                <div class="info-card">
+                    <ul class="space-y-2 text-gray-700">
+                        <li><strong>9.251</strong> expedientes no tenían informe: se excluyeron del aprendizaje supervisado, pero sus imágenes se rescataron para SSL.</li>
+                        <li><strong>1.061</strong> presentaban múltiples estudios o regiones anatómicas ambiguas.</li>
+                        <li><strong>106</strong> correspondían exclusivamente a zonas ajenas al tórax.</li>
+                    </ul>
+                </div>
+                <p class="source-note">Fuente: Capítulo 1, auditoría y curado del dataset local.</p>
+            </div>
+        </article>
+
+
+        <!-- Slide 6: Perfil y gobernanza -->
+        <article class="slide compact-slide profile-slide">
+            <div class="canva-shape"></div>
+            <div class="slide-content-wrapper">
+                <h2 class="text-4xl slide-title font-bold">Perfil del dato local</h2>
+                
+                <div class="flex flex-col gap-5 w-full">
+                    <!-- Contenido de texto (Arriba) -->
+                    <div>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div class="bg-unslight p-4 rounded-xl">
+                                <h3 class="text-lg font-bold text-unsblue mb-2">Composición</h3>
+                                <ul class="space-y-1.5 text-sm text-gray-700">
+                                    <li><strong>61,41 %</strong> pacientes femeninos y <strong>37,47 %</strong> masculinos.</li>
+                                    <li>Proyecciones: <strong>62,74 % PA</strong>, <strong>34,39 % LL</strong> y <strong>2,87 % AP</strong>.</li>
+                                    <li>Equipamiento AGFA; predomina DXD40_1000G.</li>
+                                </ul>
+                            </div>
+                            <div class="bg-unslight p-4 rounded-xl">
+                                <h3 class="text-lg font-bold text-unsblue mb-2">Heterogeneidad técnica</h3>
+                                <ul class="space-y-1.5 text-sm text-gray-700">
+                                    <li><strong>85,3 %</strong> de imágenes en 8 bits y <strong>14,7 %</strong> en 12 bits.</li>
+                                    <li>Resoluciones distintas: preprocesamiento no rígido.</li>
+                                    <li>Solo <strong>17,21 %</strong> contiene edad; sin síntomas estructurados.</li>
+                                </ul>
+                            </div>
+                        </div>
+                        <div class="info-card mt-3 p-4">
+                            <p class="text-sm text-gray-700"><strong>Gobernanza:</strong> el repositorio fue anonimizado y se depuraron las cabeceras DICOM de identificadores personales. El estudio es retrospectivo y no interviene sobre la atención clínica.</p>
+                        </div>
+                    </div>
+                    
+                    <!-- Imagen apaisada (Abajo) -->
+                    <figure class="w-5/6 mx-auto flex flex-col justify-center mt-1">
+                        <img class="thesis-figure shadow-sm max-h-[160px] object-contain" src="Tesis/Torta vistas.png" alt="Distribución de proyecciones radiográficas del dataset balanceado">
+                        <figcaption class="thesis-figure-caption text-center mt-2">Distribución de proyecciones y composición demográfica de la cohorte balanceada.</figcaption>
+                    </figure>
+                </div>
+                
+            </div>
+        </article>
+
+
+        <!-- Slide 7: Etiquetado del dataset -->
+        <article class="slide compact-slide">
+            <div class="canva-shape"></div>
+            <div class="slide-content-wrapper">
+                <h2 class="text-4xl slide-title font-bold">Etiquetado del dataset</h2>
+                <p class="text-lg text-gray-600 mb-5">Las etiquetas se obtuvieron de los informes clínicos curados, no de una anotación manual imagen por imagen.</p>
+
+                <div class="grid grid-cols-3 gap-4 mb-5">
+                    <div class="metric-card">
+                        <p class="text-3xl font-bold text-unsblue">32</p>
+                        <p class="text-sm text-gray-500 uppercase">etiquetas clínicas</p>
+                    </div>
+                    <div class="metric-card">
+                        <p class="text-3xl font-bold text-unsblue">3.737</p>
+                        <p class="text-sm text-gray-500 uppercase">asignaciones</p>
+                    </div>
+                    <div class="metric-card">
+                        <p class="text-3xl font-bold text-orange-600">2.818</p>
+                        <p class="text-sm text-gray-500 uppercase">pacientes etiquetados</p>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="bg-unslight p-5 rounded-xl">
+                        <h3 class="text-xl font-bold text-unsblue mb-3">Mapa de patologías</h3>
+                        <ul class="space-y-2 text-gray-700">
+                            <li>Vincula etiquetas normalizadas con frases equivalentes del informe.</li>
+                            <li>Ejemplo: <em>cardiomegaly</em> agrupa distintas formulaciones clínicas.</li>
+                            <li>La etiqueta <strong>normal</strong> se excluye cuando aparece una anomalía.</li>
+                        </ul>
+                    </div>
+                    <div class="bg-yellow-50 border border-yellow-200 p-5 rounded-xl">
+                        <h3 class="text-xl font-bold text-yellow-800 mb-3">Alcance y sesgo</h3>
+                        <ul class="space-y-2 text-gray-700">
+                            <li>ChatGPT asistió la extracción inicial; el mapa final fue auditado y consolidado.</li>
+                            <li><strong>normal</strong> (971) y <strong>aortic_uncoiling</strong> (1.200) dominaron la distribución.</li>
+                            <li>El ground truth no reemplaza una validación ciega por radiólogos.</li>
+                        </ul>
+                    </div>
+                </div>
+                <p class="source-note">El etiquetado automatizado introduce una posible circularidad: errores de extracción pueden propagarse a las métricas.</p>
+            </div>
+        </article>
+
+<!-- Slide 8: Desbalance y límite supervisado -->
+        <article class="slide compact-slide imbalance-slide">
+            <div class="canva-shape"></div>
+            <div class="slide-content-wrapper flex flex-col h-full">
+                <h2 class="text-4xl slide-title font-bold mb-2">Desbalance: límite para el aprendizaje supervisado</h2>
+                <p class="text-lg text-gray-600 mb-4">La cohorte local permite evaluar transferencia y retrieval, pero no ofrece suficientes ejemplos por clase para entrenar un clasificador robusto.</p>
+
+                <div class="grid grid-cols-3 gap-4 mb-4">
+                    <div class="metric-card !p-3">
+                        <p class="text-3xl font-bold text-unsblue">32</p>
+                        <p class="text-xs text-gray-500 uppercase mt-1 font-bold">clases clínicas</p>
+                    </div>
+                    <div class="metric-card !p-3">
+                        <p class="text-3xl font-bold text-orange-600">26</p>
+                        <p class="text-xs text-gray-500 uppercase mt-1 font-bold">clases con &lt; 100 casos</p>
+                    </div>
+                    <div class="metric-card !p-3">
+                        <p class="text-3xl font-bold text-red-600">7</p>
+                        <p class="text-xs text-gray-500 uppercase mt-1 font-bold">clases con &lt; 10 casos</p>
+                    </div>
+                </div>
+
+                <!-- Contenedor principal dividido con nueva proporción 8 / 4 -->
+                <div class="grid grid-cols-12 gap-5 flex-grow min-h-0">
+                    
+                    <!-- Columna Izquierda: Gráfico expandido (8 columnas) -->
+                    <div class="col-span-8 bg-unslight p-4 rounded-xl flex flex-col h-full">
+                        <h3 class="text-lg font-bold text-unsblue mb-2">Ejemplos de la cola larga</h3>
+                        
+                        <figure class="flex-grow flex flex-col justify-center min-h-0 mb-2">
+                            <img class="thesis-figure max-h-full w-full object-contain" src="Tesis/long_tail.png" alt="Distribución de frecuencia de las 32 etiquetas clínicas">
+                        </figure>
+                        
+                        <p class="text-[11px] text-gray-700 leading-tight">Distribución logarítmica: pocas etiquetas concentran la mayoría de los casos y muchas quedan en la cola minoritaria. Masa (1), neumotórax (4) y edema (5).</p>
+                    </div>
+
+                    <!-- Columna Derecha: Consecuencias comprimida (4 columnas) -->
+                    <div class="col-span-4 bg-red-50 border border-red-200 p-4 rounded-xl flex flex-col justify-center">
+                        <h3 class="text-lg font-bold text-red-700 mb-3">Consecuencia experimental</h3>
+                        <ul class="space-y-3 text-sm text-gray-800 leading-snug">
+                            <li>El modelo aprendería principalmente las etiquetas frecuentes, no la diversidad clínica.</li>
+                            <li>Las clases raras no permiten separar entrenamiento, validación y prueba con garantías.</li>
+                            <li>Accuracy y AUC serían inestables o dominadas por la clase mayoritaria.</li>
+                        </ul>
+                    </div>
+                    
+                </div>
+                <p class="source-note mt-3">Por eso se priorizó la evaluación zero-shot, el retrieval y la adaptación autosupervisada sobre las 14.132 imágenes sin etiqueta.</p>
+            </div>
+        </article>
+
+        <!-- Slide 9: Modelos Contrastivos -->
+        <article class="slide compact-slide retrieval-model-slide">
+            <div class="canva-shape"></div>
+            <div class="slide-content-wrapper">
+                <h2 class="text-4xl slide-title font-bold">Modelos Contrastivos (CheXzero)</h2>
+                
+                <div class="grid grid-cols-2 gap-4 items-stretch retrieval-layout">
+                    <div>
+                        <div class="bg-unslight p-6 rounded-xl mb-4 border border-gray-200">
+                            <h3 class="text-xl font-bold text-unsblue mb-3">Experimento de Retrieval (Imagen ↔ Texto)</h3>
+                            <p class="text-gray-700 text-lg mb-4">Se evaluó la capacidad del modelo dual-encoder de asociar el estudio con su informe bajo 3 esquemas:</p>
+                            <ul class="list-disc ml-8 text-gray-700 text-lg">
+                                <li><strong>Estricta:</strong> Recuperar al paciente exacto (penalizado por frases equivalentes).</li>
+                                <li><strong>No Supervisada:</strong> Coincidencia dentro del mismo clúster DBSCAN.</li>
+                                <li><strong>Supervisada:</strong> Coincidencia según mapa de patologías (Índice de Jaccard).</li>
+                            </ul>
+                        </div>
+
+                        <div class="info-card bg-red-50 border-l-red-500">
+                            <h3 class="text-lg font-bold text-red-700 mb-1">Evidencia de Limitaciones</h3>
+                            <p class="text-gray-800 text-lg">La recuperación cruzada libre mostró métricas limitadas debido a la <strong>variabilidad léxica clínica</strong> y la <strong>naturaleza multietiqueta</strong>, evidenciando que los embeddings congelados no son suficientes en un entorno local abierto.</p>
+                        </div>
+                    </div>
+                    <figure class="rounded-xl border border-gray-200 bg-white p-3 flex flex-col justify-center">
+                        <img class="thesis-figure" src="Tesis/embeddings_vlm.jpeg" alt="Alineación de embeddings visuales y textuales">
+                        <figcaption class="thesis-figure-caption">Los dos codificadores proyectan imágenes e informes en un espacio latente compartido para calcular su similitud.</figcaption>
+                    </figure>
+                </div>
+            </div>
+        </article>
+
+        <!-- Slide 8: Resultados de retrieval -->
+        <article class="slide compact-slide">
+            <div class="canva-shape"></div>
+            <div class="slide-content-wrapper">
+                <h2 class="text-4xl slide-title font-bold">CheXzero: resultados de retrieval</h2>
+                <p class="text-lg text-gray-600 mb-4">Comparación de los tres enfoques de evaluación sobre la cohorte inicial de 2.818 pacientes.</p>
+                <div class="overflow-x-auto rounded-xl border border-gray-200 shadow-sm">
+                    <table class="w-full text-sm text-left">
+                        <thead class="bg-unsblue text-white">
+                            <tr>
+                                <th class="px-4 py-3">Enfoque</th>
+                                <th class="px-4 py-3">Métrica</th>
+                                <th class="px-4 py-3 text-center">Imagen → Texto</th>
+                                <th class="px-4 py-3 text-center">Texto → Imagen</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-200 text-gray-700">
+                            <tr>
+                                <td class="px-4 py-2 font-semibold text-unsblue" rowspan="2">Retrieval estricto<br><span class="font-normal text-xs">(paciente exacto)</span></td>
+                                <td class="px-4 py-2">Top-1 Accuracy</td>
+                                <td class="px-4 py-2 text-center">0,4 %</td>
+                                <td class="px-4 py-2 text-center">0,5 %</td>
+                            </tr>
+                            <tr>
+                                <td class="px-4 py-2">Top-5 Accuracy</td>
+                                <td class="px-4 py-2 text-center">1,5 %</td>
+                                <td class="px-4 py-2 text-center">1,4 %</td>
+                            </tr>
+                            <tr class="bg-gray-50">
+                                <td class="px-4 py-2 font-semibold text-unsblue" rowspan="2">No supervisado<br><span class="font-normal text-xs">(clustering DBSCAN)</span></td>
+                                <td class="px-4 py-2">Top-1 (mismo clúster)</td>
+                                <td class="px-4 py-2 text-center">1,1 %</td>
+                                <td class="px-4 py-2 text-center">31,2 %</td>
+                            </tr>
+                            <tr class="bg-gray-50">
+                                <td class="px-4 py-2">Top-5 (mismo clúster)</td>
+                                <td class="px-4 py-2 text-center">5,4 %</td>
+                                <td class="px-4 py-2 text-center">38,5 %</td>
+                            </tr>
+                            <tr>
+                                <td class="px-4 py-2 font-semibold text-unsblue" rowspan="2">Supervisado<br><span class="font-normal text-xs">(pathology map / tags)</span></td>
+                                <td class="px-4 py-2">Mean Jaccard@1</td>
+                                <td class="px-4 py-2 text-center">16,8 %</td>
+                                <td class="px-4 py-2 text-center">39,9 %</td>
+                            </tr>
+                            <tr>
+                                <td class="px-4 py-2">Mean Best Jaccard@5</td>
+                                <td class="px-4 py-2 text-center">40,6 %</td>
+                                <td class="px-4 py-2 text-center">74,7 %</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </article>
+
+        <!-- Slide 10: Capítulo 3 - CheXNet -->
+        <article class="slide compact-slide">
+            <div class="canva-shape"></div>
+            <div class="slide-content-wrapper">
+                <h2 class="text-4xl slide-title font-bold">CNN en zero-shot</h2>
+                <p class="text-lg text-gray-600 mb-5">Test directo de un modelo convolucional preentrenado sobre el dataset local, sin ajuste fino con sus imágenes.</p>
+                
+                <div class="grid md:grid-cols-2 gap-8 mt-4">
+                    <div class="border border-gray-200 rounded-xl p-6 shadow-sm">
+                        <h3 class="text-2xl font-bold text-unsblue mb-4 flex items-center gap-2">
+                            <span class="bg-gray-200 p-2 rounded-lg">📸</span> CheXNet · DenseNet-121
+                        </h3>
+                        <p class="text-lg text-gray-700 mb-4"><strong>Entrada:</strong> radiografías locales frontales AP/PA.</p>
+                        <p class="text-lg text-gray-700 mb-4"><strong>Salida:</strong> confianza para 14 patologías estándar, tras mapear las 32 etiquetas locales.</p>
+                        <div class="bg-orange-50 text-orange-800 p-4 rounded-lg font-medium border border-orange-200">
+                            <strong>Zero-shot:</strong> no se entrenó con el dataset local. Evidenció un <strong>domain shift severo</strong>, con confianza inferior al 50 % en la mayoría de las patologías confirmadas.
+                        </div>
+                    </div>
+                    <div class="info-card bg-orange-50 border-l-orange-500">
+                        <h3 class="text-lg font-bold text-orange-700 mb-2">Qué se midió</h3>
+                        <ul class="space-y-2 text-gray-800">
+                            <li>Transferencia directa de un modelo entrenado fuera del centro local.</li>
+                            <li>Respuesta sobre la taxonomía de CheXNet, no generación de informes.</li>
+                            <li>Las vistas laterales se excluyeron porque el modelo fue entrenado con AP/PA.</li>
+                            <li>La generalización posterior al SSL se presenta en el capítulo 5.</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </article>
+
+        <!-- Slide 11: Resultados CheXNet zero-shot -->
+        <article class="slide compact-slide zero-shot-results-slide">
+            <div class="canva-shape"></div>
+            <div class="slide-content-wrapper">
+                <h2 class="text-4xl slide-title font-bold">CheXNet zero-shot: resultados por patología</h2>
+                <p class="text-lg text-gray-600 mb-4">Confianza promedio asignada a casos positivos confirmados del dataset local, restringidos a proyecciones frontales AP/PA.</p>
+
+                <div class="overflow-x-auto rounded-xl border border-gray-200 shadow-sm">
+                    <table class="w-full text-sm text-left">
+                        <thead class="bg-unsblue text-white">
+                            <tr>
+                                <th class="px-4 py-2">Patología</th>
+                                <th class="px-4 py-2 text-center">Casos (N)</th>
+                                <th class="px-4 py-2 text-center">Confianza media</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-200 text-gray-700">
+                            <tr><td class="px-4 py-2 font-semibold">Cardiomegalia</td><td class="px-4 py-2 text-center">310</td><td class="px-4 py-2 text-center">39 ± 23 %</td></tr>
+                            <tr class="bg-gray-50"><td class="px-4 py-2 font-semibold">Consolidación</td><td class="px-4 py-2 text-center">71</td><td class="px-4 py-2 text-center">38 ± 18 %</td></tr>
+                            <tr><td class="px-4 py-2 font-semibold">Neumonía</td><td class="px-4 py-2 text-center">67</td><td class="px-4 py-2 text-center">16 ± 21 %</td></tr>
+                            <tr class="bg-gray-50"><td class="px-4 py-2 font-semibold">Infiltración</td><td class="px-4 py-2 text-center">47</td><td class="px-4 py-2 text-center">45 ± 13 %</td></tr>
+                            <tr><td class="px-4 py-2 font-semibold">Enfisema</td><td class="px-4 py-2 text-center">17</td><td class="px-4 py-2 text-center">52 ± 2 %</td></tr>
+                            <tr class="bg-gray-50"><td class="px-4 py-2 font-semibold">Edema</td><td class="px-4 py-2 text-center">5</td><td class="px-4 py-2 text-center">10 ± 20 %</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4 mt-4">
+                    <div class="bg-orange-50 border border-orange-200 p-4 rounded-xl">
+                        <h3 class="font-bold text-orange-800 mb-2">Lectura del resultado</h3>
+                        <p class="text-gray-700">La mayoría de las confianzas queda por debajo del 50 %, incluso en hallazgos con varios casos positivos. El modelo no transfiere de forma confiable al centro local.</p>
+                    </div>
+                    <div class="bg-red-50 border border-red-200 p-4 rounded-xl">
+                        <h3 class="font-bold text-red-700 mb-2">Advertencias</h3>
+                        <p class="text-gray-700">La desviación es amplia y las clases con N muy bajo no permiten conclusiones estables. El etiquetado local proviene de informes procesados, no de validación radiológica ciega.</p>
+                    </div>
+                </div>
+                <p class="source-note">Capítulo 3: evaluación zero-shot de CheXNet sobre la taxonomía local mapeada a 14 clases estándar.</p>
+            </div>
+        </article>
+
+        <!-- Slide 12: Capítulo 4 - MedGemma cerrado -->
+        <article class="slide compact-slide">
+            <div class="canva-shape"></div>
+            <div class="slide-content-wrapper">
+                <h2 class="text-4xl slide-title font-bold">LLM con salida cerrada</h2>
+                <p class="text-lg text-gray-600 mb-5">MedGemma recibe la radiografía y debe responder únicamente con tags de la ontología local, no redactar un informe libre.</p>
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="metric-card">
+                        <p class="text-sm uppercase text-gray-500">MedGemma 4B Q6</p>
+                        <p class="text-4xl font-bold text-unsblue mt-2">0,3446</p>
+                        <p class="text-gray-600">Exact Match</p>
+                        <p class="text-3xl font-bold text-red-600 mt-3">0,0560</p>
+                        <p class="text-gray-600">Macro F1</p>
+                    </div>
+                    <div class="metric-card">
+                        <p class="text-sm uppercase text-gray-500">MedGemma Latest</p>
+                        <p class="text-4xl font-bold text-unsblue mt-2">0,3382</p>
+                        <p class="text-gray-600">Exact Match</p>
+                        <p class="text-3xl font-bold text-red-600 mt-3">0,0557</p>
+                        <p class="text-gray-600">Macro F1</p>
+                    </div>
+                </div>
+                <div class="bg-orange-50 border border-orange-200 p-5 rounded-xl mt-5 text-gray-800">
+                    <p class="mb-3"><strong>Diseño del test:</strong> se evaluaron dos versiones de MedGemma bajo el mismo esquema de clasificación multietiqueta. La respuesta debía ajustarse al conjunto cerrado de tags del <em>pathology map</em>.</p>
+                    <p><strong>Interpretación:</strong> el formato rígido penaliza equivalencias clínicas y obliga al LLM a resolver clasificación, no generación radiológica. Por eso el Exact Match y el Macro F1 son bajos y el resultado es exploratorio.</p>
+                </div>
+            </div>
+        </article>
+
+        <!-- Slide 11: Generación Libre y LLM Juez -->
+        <article class="slide compact-slide">
+            <div class="canva-shape"></div>
+            <div class="slide-content-wrapper">
+                <h2 class="text-4xl slide-title font-bold">Generación Libre y LLM Juez</h2>
+                <p class="text-xl text-gray-600 mb-6">Frente a las limitaciones de las etiquetas, se permitió la redacción en texto libre.</p>
+
+                <div class="bg-unsblue text-white rounded-xl p-6 shadow-lg mb-6 flex justify-around text-center">
+                    <div>
+                        <p class="text-sm uppercase tracking-wider text-blue-200 font-semibold mb-1">MedGemma 4B Q6</p>
+                        <p class="text-4xl font-bold">0.69</p>
+                        <p class="text-sm mt-1">Micro F1</p>
+                    </div>
+                    <div class="w-px bg-blue-800"></div>
+                    <div>
+                        <p class="text-sm uppercase tracking-wider text-blue-200 font-semibold mb-1">MedGemma 4B Q6</p>
+                        <p class="text-4xl font-bold">0.43</p>
+                        <p class="text-sm mt-1">Exact Match</p>
+                    </div>
+                </div>
+
+                <div class="info-card">
+                    <h3 class="text-xl font-bold text-unsblue mb-2">Evaluación mediante LLM Juez en HPC</h3>
+                    <p class="text-lg text-gray-700 mb-3">El benchmark bruto obtuvo <strong>Micro F1 = 0,69</strong> y <strong>Exact Match = 0,43</strong>. La auditoría de 100 casos mostró que el juez penalizaba expresiones clínicamente equivalentes.</p>
+                    <p class="text-lg text-gray-700 bg-yellow-50 p-3 rounded border-l-4 border-yellow-400">
+                        <strong>Desvío estimado:</strong> 10,04 % en TP, 10,02 % en FP y 27,06 % en FN para MedGemma 4B Q6. La proyección corregida llega a una cota teórica de Exact Match = 0,59, pendiente de validación radiológica.
+                    </p>
+                </div>
+            </div>
+        </article>
+
+        <!-- Slide 12: Diseño de la evaluación generativa -->
+        <article class="slide compact-slide generation-evaluation-slide">
+            <div class="canva-shape"></div>
+            <div class="slide-content-wrapper">
+                <h2 class="text-4xl slide-title font-bold">Generación libre: control y evaluación</h2>
+                <div class="grid grid-cols-2 gap-3 generation-layout">
+                    <div class="bg-unslight p-3 rounded-xl">
+                        <h3 class="text-xl font-bold text-unsblue mb-3">Prompt radiológico</h3>
+                        <ul class="space-y-2 text-gray-700">
+                            <li>Máximo de <strong>cuatro oraciones</strong> y 120 tokens.</li>
+                            <li>Penaliza falsos positivos y evita recomendaciones terapéuticas.</li>
+                            <li>Incorpora sexo, proyecciones y ejemplos few-shot del estilo esperado.</li>
+                            <li>Temperatura baja: <strong>τ = 0,1</strong>, para una salida reproducible.</li>
+                        </ul>
+                    </div>
+                    <div class="bg-unslight p-3 rounded-xl">
+                        <h3 class="text-xl font-bold text-unsblue mb-3">LLM como juez</h3>
+                        <ul class="space-y-2 text-gray-700">
+                            <li>Evaluación masiva con un LLM juez en infraestructura HPC.</li>
+                            <li>Extrae hallazgos antes de comparar predicción y referencia.</li>
+                            <li>Reconoce equivalencias semánticas, no solo coincidencias de palabras.</li>
+                            <li>Auditoría manual de <strong>100 casos</strong> para medir la discrepancia.</li>
+                        </ul>
+                    </div>
+                </div>
+                <p class="text-sm text-gray-700 bg-blue-50 border border-blue-200 rounded-xl p-2 mt-2"><strong>LLM juez:</strong> Qwen2.5-14B-Instruct en Clementina XXI; auditó 2.818 pacientes y mostró sobre-rigidez sintáctica.</p>
+                <figure class="mt-3 rounded-xl border border-gray-200 bg-white p-2 generation-figure">
+                    <img class="thesis-figure" src="Tesis/comparacio_generacion.png" alt="Comparación de resultados de generación de informes">
+                    <figcaption class="thesis-figure-caption">Comparación visual de las estrategias de generación evaluadas en el pipeline.</figcaption>
+                </figure>
+            </div>
+        </article>
+
+        <!-- Slide 15: Estructura de entrenamiento -->
+        <article class="slide compact-slide training-slide">
+            <div class="canva-shape" style="top: auto; bottom: -50px; right: -50px;"></div>
+            <div class="slide-content-wrapper">
+                <h2 class="text-4xl slide-title font-bold">Estructura de entrenamiento</h2>
+                <p class="text-lg text-gray-600 mb-5">El capítulo 5 separa adaptación de dominio, ajuste supervisado y evaluación externa.</p>
+
+                <div class="bg-blue-50 border border-blue-200 rounded-xl p-3 mb-4">
+                    <div class="grid grid-cols-3 gap-3 text-center">
+                        <div>
+                            <p class="text-xs uppercase tracking-wide text-blue-700 font-semibold">NIH Chest X-rays</p>
+                            <p class="font-bold text-unsblue">112.120 radiografías</p>
+                            <p class="text-xs text-gray-600">30.805 pacientes · 15 categorías</p>
+                        </div>
+                        <div>
+                            <p class="text-xs uppercase tracking-wide text-blue-700 font-semibold">Función metodológica</p>
+                            <p class="font-bold text-unsblue">Ajuste supervisado</p>
+                            <p class="text-xs text-gray-600">Binario y multietiqueta (14 patologías)</p>
+                        </div>
+                        <div>
+                            <p class="text-xs uppercase tracking-wide text-blue-700 font-semibold">Preprocesamiento</p>
+                            <p class="font-bold text-unsblue">PNG/JPG → 512 × 512</p>
+                            <p class="text-xs text-gray-600">Normalización compatible con XRV</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="space-y-4 mt-2">
+                    <div class="flex bg-white shadow-sm border border-gray-100 p-4 rounded-xl items-center">
+                        <div class="text-4xl font-bold text-unsaccent opacity-40 mr-6 w-12 text-center">1</div>
+                        <div>
+                            <h3 class="text-xl font-bold text-gray-800">Backbone inicial</h3>
+                            <p class="text-gray-600">ResNet-50 de TorchXRayVision (<em>resnet50-res512-all</em>), configurada para imágenes de 512 × 512 y preentrenada sobre repositorios internacionales.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="flex bg-white shadow-sm border border-gray-100 p-4 rounded-xl items-center">
+                        <div class="text-4xl font-bold text-unsaccent opacity-40 mr-6 w-12 text-center">2</div>
+                        <div>
+                            <h3 class="text-xl font-bold text-gray-800">Adaptación SSL local</h3>
+                            <p class="text-gray-600">El backbone se adapta sin etiquetas con <strong>14.132 radiografías</strong> locales PA/AP. Esta etapa precede al ajuste supervisado y se detalla en la slide siguiente.</p>
+                        </div>
+                    </div>
+
+                    <div class="flex bg-white shadow-sm border border-gray-100 p-4 rounded-xl items-center">
+                        <div class="text-4xl font-bold text-unsaccent opacity-40 mr-6 w-12 text-center">3</div>
+                        <div>
+                            <h3 class="text-xl font-bold text-gray-800">Ajuste supervisado y test</h3>
+                            <p class="text-gray-600">NIH aportó etiquetas públicas para entrenar un clasificador binario y otro multietiqueta de 14 clases. Sus umbrales se calibraron allí; la cohorte local quedó como evaluación externa independiente.</p>
+                        </div>
+                    </div>
+                </div>
+                <p class="source-note">NIH funciona como verificación interna porque ya forma parte del preentrenamiento XRV; la generalización real se mide en la cohorte local.</p>
+            </div>
+        </article>
+
+        <!-- Slide 17: Adaptación SSL -->
+        <article class="slide compact-slide ssl-slide">
+            <div class="canva-shape" style="top: auto; bottom: -50px; right: auto; left: -50px;"></div>
+            <div class="slide-content-wrapper">
+                <h2 class="text-4xl slide-title font-bold">Adaptación de dominio mediante SSL</h2>
+                <p class="text-lg text-gray-600 mb-4">El backbone aprende la distribución visual local sin utilizar etiquetas diagnósticas.</p>
+                <div class="grid grid-cols-4 gap-3 mb-4">
+                    <div class="metric-card"><p class="text-2xl font-bold text-unsblue">14.132</p><p class="text-xs text-gray-600">radiografías PA/AP sin etiqueta</p></div>
+                    <div class="metric-card"><p class="text-2xl font-bold text-unsblue">85/15 %</p><p class="text-xs text-gray-600">train / validación SSL</p></div>
+                    <div class="metric-card"><p class="text-2xl font-bold text-unsblue">20</p><p class="text-xs text-gray-600">épocas completadas</p></div>
+                    <div class="metric-card"><p class="text-2xl font-bold text-green-600">12.334,46</p><p class="text-xs text-gray-600">MSE final de validación</p></div>
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div class="bg-unslight p-3 rounded-xl">
+                        <h3 class="font-bold text-unsblue mb-1">Cómo se entrenó</h3>
+                        <p class="text-sm text-gray-700">Autoencoder basado en ResNet-50: reconstrucción de imágenes de 512 × 512 con pérdida MSE, Adam (lr = 10<sup>-4</sup>) y lote efectivo de 32 mediante acumulación de gradientes.</p>
+                    </div>
+                    <div class="bg-blue-50 border border-blue-200 p-3 rounded-xl">
+                        <h3 class="font-bold text-unsblue mb-1">Control metodológico</h3>
+                        <p class="text-sm text-gray-700">Se excluyeron pacientes de evaluación y se verificó intersección nula entre particiones. Los pesos finales se guardaron en <em>backbone_ssl_local.pth</em>.</p>
+                    </div>
+                </div>
+                <p class="source-note">El SSL adapta representaciones visuales al centro; no reemplaza el entrenamiento supervisado ni produce etiquetas clínicas.</p>
+            </div>
+        </article>
+
+<!-- Slide 18: Entrenamiento y validación binaria -->
+        <article class="slide compact-slide binary-results-slide">
+            <div class="canva-shape"></div>
+            <div class="slide-content-wrapper">
+                <h2 class="text-4xl slide-title font-bold mb-2">Entrenamiento y validación binaria</h2>
+                <p class="text-lg text-gray-600 mb-5">Clasificador normal vs. patológico inicializado con los pesos obtenidos mediante SSL.</p>
+                
+                <!-- Cambiamos a grid-cols-2 (50% / 50%) para dar más espacio horizontal -->
+                <div class="grid grid-cols-2 gap-8 items-stretch h-full pb-2">
+                    
+                    <!-- Lado Izquierdo: Métricas y Tabla -->
+                    <div class="flex flex-col gap-4">
+                        <div class="grid grid-cols-3 gap-3">
+                            <div class="metric-card !p-3 flex flex-col justify-center">
+                                <p class="text-2xl font-bold text-unsblue">22.294</p>
+                                <p class="text-[10px] text-gray-600 mt-1 uppercase leading-tight font-bold">validación NIH</p>
+                            </div>
+                            <div class="metric-card !p-3 flex flex-col justify-center">
+                                <p class="text-2xl font-bold text-unsblue">563</p>
+                                <p class="text-[10px] text-gray-600 mt-1 uppercase leading-tight font-bold">test local externo</p>
+                            </div>
+                            <div class="metric-card !p-3 flex flex-col justify-center">
+                                <p class="text-2xl font-bold text-unsblue">0,3999</p>
+                                <p class="text-[10px] text-gray-600 mt-1 uppercase leading-tight font-bold">Umbral Youden NIH</p>
+                            </div>
+                        </div>
+                        
+                        <div class="overflow-hidden rounded-xl border border-gray-200 shadow-sm bg-white">
+                            <table class="w-full text-sm text-left">
+                                <thead class="bg-unsblue text-white">
+                                    <tr>
+                                        <th class="px-4 py-2.5">Métrica</th>
+                                        <th class="px-4 py-2.5 text-center">NIH</th>
+                                        <th class="px-4 py-2.5 text-center">Local</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-gray-200">
+                                    <tr><td class="px-4 py-2.5 font-semibold">AUC-ROC</td><td class="px-4 py-2.5 text-center">0,7679</td><td class="px-4 py-2.5 text-center font-bold">0,7640</td></tr>
+                                    <tr class="bg-gray-50"><td class="px-4 py-2.5">Sensibilidad patológica</td><td class="px-4 py-2.5 text-center">0,7358</td><td class="px-4 py-2.5 text-center">0,6695</td></tr>
+                                    <tr><td class="px-4 py-2.5">Especificidad normal</td><td class="px-4 py-2.5 text-center">0,6851</td><td class="px-4 py-2.5 text-center">0,7393</td></tr>
+                                    <tr class="bg-gray-50"><td class="px-4 py-2.5">VPP</td><td class="px-4 py-2.5 text-center">0,6676</td><td class="px-4 py-2.5 text-center">0,4100</td></tr>
+                                    <tr><td class="px-4 py-2.5">F1 patológica</td><td class="px-4 py-2.5 text-center">0,6999</td><td class="px-4 py-2.5 text-center">0,5000</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <p class="source-note mt-2">La AUC se mantiene estable bajo domain shift; el VPP cae en la cohorte local por su prevalencia normal del 79 % (445/563).</p>
+                    </div>
+
+                    <!-- Lado Derecho: Imágenes apiladas -->
+                    <div class="flex flex-col gap-4 h-full">
+                        <!-- ROC Curve: flex-1 le permite absorber todo el espacio libre restante y el max-h es mucho más generoso -->
+                        <figure class="rounded-xl border border-gray-200 bg-white p-4 flex flex-col justify-center items-center flex-1 shadow-sm">
+                            <img class="thesis-figure max-h-[280px] w-full object-contain border-0" src="Tesis/domain_shift_binario.png" alt="Curvas ROC del clasificador binario">
+                            <figcaption class="thesis-figure-caption text-center mt-3 text-sm">ROC: AUC NIH = 0,7679; local = 0,7640.</figcaption>
+                        </figure>
+                        
+                        <!-- Matriz de confusión: al ser apaisada, no necesita tanto max-h -->
+                        <figure class="rounded-xl border border-gray-200 bg-white p-3 flex flex-col justify-center items-center shadow-sm">
+                            <img class="thesis-figure max-h-[140px] w-full object-contain border-0" src="Tesis/Matriz de confusion.png" alt="Matrices de confusión del clasificador binario">
+                            <figcaption class="thesis-figure-caption text-center mt-2">Matrices de confusión: validación interna y test externo.</figcaption>
+                        </figure>
+                    </div>
+                    
+                </div>
+            </div>
+        </article>
+
+<!-- Slide 19: Entrenamiento y validación multietiqueta -->
+        <article class="slide compact-slide multilabel-results-slide">
+            <div class="canva-shape"></div>
+            <div class="slide-content-wrapper flex flex-col h-full">
+                <h2 class="text-4xl slide-title font-bold mb-2">Entrenamiento y validación multietiqueta</h2>
+                <p class="text-lg text-gray-600 mb-4">Una salida de 14 patologías, con umbral independiente por clase calibrado sobre NIH.</p>
+                
+                <!-- Layout de dos columnas para equilibrar texto y gráfico alto -->
+                <div class="grid grid-cols-12 gap-6 flex-grow min-h-0">
+                    
+                    <!-- Columna Izquierda: Métricas y Texto (5 columnas) -->
+                    <div class="col-span-5 flex flex-col gap-4">
+                        <div class="grid grid-cols-2 gap-3">
+                            <div class="metric-card !p-3">
+                                <p class="text-2xl font-bold text-unsblue">5.176</p>
+                                <p class="text-[11px] text-gray-600 mt-1 uppercase font-semibold">validación NIH</p>
+                            </div>
+                            <div class="metric-card !p-3">
+                                <p class="text-2xl font-bold text-unsblue">592</p>
+                                <p class="text-[11px] text-gray-600 mt-1 uppercase font-semibold">test local externo</p>
+                            </div>
+                        </div>
+                        
+                        <div class="bg-unslight p-4 rounded-xl flex-grow">
+                            <h3 class="text-lg font-bold text-unsblue mb-2">Transferencia destacada</h3>
+                            <ul class="text-sm text-gray-700 space-y-2">
+                                <li><strong>Cardiomegalia:</strong> AUC local 0,9340.</li>
+                                <li><strong>Enfisema:</strong> AUC local 0,8720.</li>
+                                <li><strong>Hernia:</strong> AUC local 0,7722.</li>
+                                <li><strong>Nódulo:</strong> sensibilidad 0,9500, pero especificidad 0,1224.</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="bg-red-50 border border-red-200 p-4 rounded-xl">
+                            <h3 class="text-lg font-bold text-red-700 mb-2">Límite de interpretación</h3>
+                            <p class="text-sm text-gray-700 leading-snug">Edema (N=5), masa (N=1) y neumotórax (N=4) no permiten métricas locales estables y se reportan como n/d. Las clases minoritarias siguen siendo el principal límite.</p>
+                        </div>
+                    </div>
+
+                    <!-- Columna Derecha: Gráfico de Barras (7 columnas) -->
+                    <div class="col-span-7 flex flex-col h-full">
+                        <figure class="rounded-xl border border-gray-200 bg-white p-4 flex flex-col justify-center items-center h-full shadow-sm">
+                            <img class="thesis-figure max-h-full w-full object-contain border-0" src="Tesis/barras laterales.png" alt="Comparación de AUC por patología entre NIH y el dataset local">
+                            <figcaption class="thesis-figure-caption text-center mt-3 text-sm">AUC por patología: mejor transferencia en patrones estructurales que en hallazgos difusos.</figcaption>
+                        </figure>
+                    </div>
+                    
+                </div>
+                <p class="source-note mt-3">Se utilizó AdamW, weight decay 10<sup>-2</sup>, Cosine Annealing y clamping de <em>pos_weight</em> a 10; la cohorte local permaneció fuera del ajuste supervisado.</p>
+            </div>
+        </article>
+
+        <!-- Slide 15: Preprocesamiento y seguridad -->
+        <article class="slide compact-slide">
+            <div class="canva-shape"></div>
+            <div class="slide-content-wrapper">
+                <h2 class="text-4xl slide-title font-bold">De DICOM a informe asistido</h2>
+                <div class="grid grid-cols-3 gap-4">
+                    <div class="metric-card">
+                        <p class="text-3xl font-bold text-unsblue">1</p>
+                        <h3 class="font-bold text-unsblue mt-2">Normalizar</h3>
+                        <p class="text-gray-600 text-sm mt-1">Fotometría, ventana DICOM, profundidad de bits y CLAHE.</p>
+                    </div>
+                    <div class="metric-card">
+                        <p class="text-3xl font-bold text-unsblue">2</p>
+                        <h3 class="font-bold text-unsblue mt-2">Detectar</h3>
+                        <p class="text-gray-600 text-sm mt-1">Filtro normal/patológico y luego 14 etiquetas con umbrales por clase.</p>
+                    </div>
+                    <div class="metric-card">
+                        <p class="text-3xl font-bold text-unsblue">3</p>
+                        <h3 class="font-bold text-unsblue mt-2">Redactar</h3>
+                        <p class="text-gray-600 text-sm mt-1">Qwen2.5:7b combina hallazgos y contexto mediante plantillas y fallback.</p>
+                    </div>
+                </div>
+                <figure class="mt-5 rounded-xl border border-gray-200 bg-white p-3">
+                    <img class="thesis-figure thesis-figure-compact" src="Tesis/Presentacion Lavalle 11.png" alt="Diagrama de flujo del sistema CAD">
+                    <figcaption class="thesis-figure-caption">Flujo conceptual del sistema CAD: clasificación, detección multietiqueta y redacción asistida.</figcaption>
+                </figure>
+                <div class="bg-yellow-50 border border-yellow-200 p-5 rounded-xl mt-5">
+                    <p class="text-gray-800"><strong>Límite operacional:</strong> el resultado es un borrador para revisión humana. El sistema no diagnostica, no descarta estudios y no prioriza pacientes de manera autónoma.</p>
+                </div>
+            </div>
+        </article>
+
+        <!-- Slide 16: Limitaciones y futuro -->
+        <article class="slide compact-slide">
+            <div class="canva-shape"></div>
+            <div class="slide-content-wrapper">
+                <h2 class="text-4xl slide-title font-bold">Limitaciones y trabajo futuro</h2>
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="bg-red-50 border border-red-200 p-5 rounded-xl">
+                        <h3 class="text-xl font-bold text-red-700 mb-3">Lo que todavía limita</h3>
+                        <ul class="space-y-2 text-gray-700">
+                            <li>El recorte central puede eliminar ápices y ángulos costofrénicos.</li>
+                            <li>CLAHE puede amplificar ruido y alterar texturas suaves.</li>
+                            <li>No hubo consenso radiológico directo para todo el ground truth.</li>
+                            <li>Clases raras: masa N=1, neumotórax N=4, edema N=5.</li>
+                        </ul>
+                    </div>
+                    <div class="bg-green-50 border border-green-200 p-5 rounded-xl">
+                        <h3 class="text-xl font-bold text-green-700 mb-3">Cómo superarlo</h3>
+                        <ul class="space-y-2 text-gray-700">
+                            <li>Padding y resizing para preservar anatomía periférica.</li>
+                            <li>Fine-tuning local con 1.000–3.000 imágenes curadas.</li>
+                            <li>Revisión independiente de 2–3 radiólogos y consenso.</li>
+                            <li>Modelos de mayor resolución y aprendizaje federado.</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </article>
+
+        <!-- Slide 21: Conclusiones -->
+        <article class="slide compact-slide conclusions-slide">
+            <div class="canva-shape"></div>
+            <div class="slide-content-wrapper">
+                <h2 class="text-4xl slide-title font-bold">Conclusiones</h2>
+                <p class="text-lg text-gray-600 mb-4">El trabajo demuestra la viabilidad técnica de un pipeline CAD local, pero no de un sistema de diagnóstico autónomo.</p>
+
+                <div class="grid grid-cols-2 gap-3">
+                    <div class="bg-blue-50 border border-blue-200 p-4 rounded-xl">
+                        <h3 class="font-bold text-unsblue mb-1">Curado y adaptación</h3>
+                        <p class="text-gray-700 text-sm">El curado del repositorio y el SSL sobre <strong>14.132 imágenes locales</strong> permitieron adaptar las representaciones visuales y reducir el impacto del domain shift.</p>
+                    </div>
+                    <div class="bg-green-50 border border-green-200 p-4 rounded-xl">
+                        <h3 class="font-bold text-green-800 mb-1">Clasificación binaria</h3>
+                        <p class="text-gray-700 text-sm">El modelo alcanzó <strong>AUC = 0,7640</strong> en el test local, comparable con NIH (0,7679). Sin embargo, su VPP fue <strong>0,4100</strong> y la sensibilidad 0,6695.</p>
+                    </div>
+                    <div class="bg-purple-50 border border-purple-200 p-4 rounded-xl">
+                        <h3 class="font-bold text-purple-800 mb-1">Multietiqueta y generación</h3>
+                        <p class="text-gray-700 text-sm">La transferencia fue desigual: mejor en patrones estructurales como cardiomegalia y enfisema, y más débil en hallazgos difusos. La generación libre y su evaluación con LLM juez deben interpretarse como resultados exploratorios.</p>
+                    </div>
+                    <div class="bg-orange-50 border border-orange-200 p-4 rounded-xl">
+                        <h3 class="font-bold text-orange-800 mb-1">Implicación clínica</h3>
+                        <p class="text-gray-700 text-sm">El ground truth automático, las clases minoritarias y la ausencia de consenso radiológico limitan la generalización. El sistema debe operar con <strong>revisión humana obligatoria</strong>.</p>
+                    </div>
+                </div>
+
+                <div class="bg-unsblue text-white rounded-xl p-4 mt-4 text-center">
+                    <p class="text-lg font-semibold">Conclusión central</p>
+                    <p class="text-sm mt-1">La arquitectura híbrida —visión adaptada al dominio, clasificación y redacción controlada— es un prototipo viable de asistencia radiológica, no un sustituto del especialista.</p>
+                </div>
+            </div>
+        </article>
+
+    </main>
+
+    <!-- Controles de la Presentación -->
+    <div class="presentation-controls">
+        <button id="btn-prev" class="p-2 text-gray-500 hover:text-unsblue transition-colors focus:outline-none" title="Anterior (Flecha Izquierda)">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
+        </button>
+        
+        <div class="font-semibold text-gray-600 min-w-[80px] text-center">
+            <span id="current-slide">1</span> / <span id="total-slides">21</span>
+        </div>
+
+        <button id="btn-next" class="p-2 text-gray-500 hover:text-unsblue transition-colors focus:outline-none" title="Siguiente (Flecha Derecha / Espacio)">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+        </button>
+    </div>
+
+    <!-- Script de lógica de presentación -->
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            document.querySelector('.intro-slide')?.remove();
+
+            const datasetSlide = document.querySelector('.dataset-slide');
+            const auditSlide = [...document.querySelectorAll('.slide')].find(
+                slide => slide.querySelector('h2')?.textContent.trim() === 'Auditoría del repositorio'
+            );
+            if (datasetSlide && auditSlide) {
+                datasetSlide.parentNode.insertBefore(auditSlide, datasetSlide);
+            }
+
+            const findSlideByTitle = (title) => [...document.querySelectorAll('.slide')].find(
+                slide => slide.querySelector('h2')?.textContent.trim() === title
+            );
+            const pipelineSlide = findSlideByTitle('De DICOM a informe asistido');
+            const trainingSlide = findSlideByTitle('Estructura de entrenamiento');
+            if (pipelineSlide && trainingSlide) {
+                trainingSlide.parentNode.insertBefore(pipelineSlide, trainingSlide);
+            }
+
+            const slides = document.querySelectorAll('.slide');
+            const btnPrev = document.getElementById('btn-prev');
+            const btnNext = document.getElementById('btn-next');
+            const currentEl = document.getElementById('current-slide');
+            const totalEl = document.getElementById('total-slides');
+            
+            let currentIndex = 0;
+            const totalSlides = slides.length;
+            totalEl.textContent = totalSlides;
+
+            function renderSlide(index) {
+                slides.forEach((slide, i) => {
+                    if (i === index) {
+                        slide.classList.add('active');
+                    } else {
+                        slide.classList.remove('active');
+                    }
+                });
+                
+                currentEl.textContent = index + 1;
+                btnPrev.disabled = index === 0;
+                btnNext.disabled = index === totalSlides - 1;
+            }
+
+            function goNext() {
+                if (currentIndex < totalSlides - 1) {
+                    currentIndex++;
+                    renderSlide(currentIndex);
+                }
+            }
+
+            function goPrev() {
+                if (currentIndex > 0) {
+                    currentIndex--;
+                    renderSlide(currentIndex);
+                }
+            }
+
+            btnNext.addEventListener('click', goNext);
+            btnPrev.addEventListener('click', goPrev);
+
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'ArrowRight' || e.key === ' ') {
+                    e.preventDefault();
+                    goNext();
+                } else if (e.key === 'ArrowLeft') {
+                    e.preventDefault();
+                    goPrev();
+                }
+            });
+
+            renderSlide(0);
+        });
+    </script>
+</body>
+</html>

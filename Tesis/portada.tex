@@ -1,0 +1,106 @@
+\documentclass[../tesis.tex]{subfiles}
+\begin{document}
+\graphicspath{{../imagenes/}{imagenes/}}
+
+\begin{titlepage}
+\begin{tikzpicture}[remember picture, overlay]
+  \draw[line width = 1pt] ($(current page.north west) + (1in,-1in)$) rectangle ($(current page.south east) + (-1in,1in)$);
+  \draw[line width = 1pt] ($(current page.north west) + (1.05in,-1.05in)$) rectangle ($(current page.south east) + (-1.05in,1.05in)$);
+\end{tikzpicture}
+
+%\begin{center}
+%
+%% Upper part of the page
+%\textsc{\LARGE University}\\[2.5cm]
+%
+%\textsc{\Large Project}\\[3cm]
+%
+%% Title
+%\HRule \\[0.4cm]
+%{ \huge \bfseries Title}\\[0.4cm]
+%
+%\HRule \\[4cm]
+%\begin{minipage}{0.45\textwidth}
+%\begin{flushleft} \large
+%\emph{Author:}\\
+%name \textsc{name}
+%\end{flushleft}
+%\end{minipage}
+%\begin{minipage}{0.45\textwidth}
+%\begin{flushright} \large
+%\emph{Supervisor:} \\
+%name \textsc{name}
+%\end{flushright}
+%\end{minipage}
+%
+%\vfill
+%
+%% Bottom of the page
+%{\large \today}
+%
+%\end{center}
+	\begin{center}
+		\vspace{1cm}
+		\includegraphics[width=0.3\textwidth]{logo-uns.png}
+		
+        \vspace{0.5cm}        
+        \begin{Large}
+        	\textbf{UNIVERSIDAD NACIONAL DEL SUR}
+        \end{Large}
+        
+        \begin{large}
+        \vspace{2.0cm}       
+        TESIS DE LICENCIADO EN FÍSICA
+        
+		\vspace{1.0cm}        
+        Generación automática de informes radiológicos de tórax a partir de
+radiografías DICOM y metadatos asociados usando inteligencia artificial       
+        
+        \vspace{1.0cm}
+        Francisco Dos Santos Borges       
+    
+    	\vspace{5.0cm}
+		BAHÍA BLANCA
+		\hspace{5.0cm}
+		ARGENTINA
+	
+		\vspace{1cm}
+		2026
+		\end{large}
+	\end{center}
+\end{titlepage}
+
+\chapter*{Prefacio}
+	Esta Tesis se presenta como parte de los requisitos para optar al grado Académico de Licenciado en Física, de la Universidad Nacional del Sur y no ha sido presentada previamente para la obtención de otro título en esta Universidad u otra.
+	La misma contiene los resultados obtenidos en investigaciones llevadas a cabo en el ámbito del Departamento de Física durante el año 2026, bajo la dirección del Dr. Nicolás García y co-dirección de la Dra. Anabella Abate.
+
+	\vspace{2.0cm}
+	\hspace{8.0cm}
+	Francisco Dos Santos Borges
+	
+	\vspace{3.0cm}
+	\begin{center}
+	\fbox{%
+	\begin{minipage}{15.0cm}
+		\begin{minipage}{3.0cm}
+			\includegraphics[width=0.8\textwidth]{logo-uns.png}
+		\end{minipage}
+		\hspace{1.0cm}
+		\begin{minipage}{10.0cm}
+			\centering
+			UNIVERSIDAD NACIONAL DEL SUR\\
+			Secretaría General de Posgrado y Educación Continua
+		\end{minipage}		
+		
+		\vspace{1.0cm}
+		\hspace{1.0cm}
+		\begin{minipage}{13.0cm}
+		\begin{large}	
+		La presente tesis ha sido aprobada el ..../..../...... , mereciendo la calificación de ......(............................)
+		\end{large}
+		\end{minipage}
+		\vspace{2.0cm}
+	\end{minipage}}
+	\end{center}
+
+\end{document}

@@ -1,0 +1,131 @@
+\documentclass[../tesis.tex]{subfiles}
+\begin{document}
+
+% Ruta de imagenes para compilacion independiente o desde el archivo principal
+\graphicspath{{../imagenes/}{imagenes/}}
+
+\chapter{Evaluación de modelos de visión clásicos y LLMs multimodales en la detección de patologías}
+
+\section{Introducción a las redes neuronales convolucionales y CheXNet}
+\label{sec:intro_cnn_chexnet}
+
+Una Red Neuronal Convolucional (\textit{Convolutional Neural Network}, CNN) es una arquitectura de aprendizaje profundo diseñada específicamente para procesar datos con estructura matricial o espacial, como imágenes médicas y videos. Sus componentes fundamentales incluyen capas de convolución para la extracción de características locales, capas de agrupación (\textit{pooling}) para reducir la dimensionalidad espacial, y capas totalmente conectadas (\textit{dense layers}) para la clasificación final.
+
+Dentro de esta familia destacan las Redes Convolucionales Conectadas Densamente (\textit{DenseNets}), las cuales implementan un patrón de conectividad donde cada capa recibe como entrada los mapas de características de todas las capas precedentes a través de la concatenación. Las DenseNets se fundamentan exclusivamente en operaciones de convolución espacial sobre grillas de píxeles bidimensionales. Esto contrasta con los modelos de lenguaje de gran tamaño (\textit{Large Language Models}, LLMs) y los modelos de visión y lenguaje (\textit{Vision-Language Models}, VLMs) basados en la arquitectura \textit{Transformer}, la cual sustituye los operadores convolucionales por mecanismos de autoatención (\textit{Self-Attention}) para modelar relaciones sintácticas y semánticas de largo alcance en secuencias de datos.
+
+En la búsqueda de modelos discriminativos especializados en la detección de patologías en radiografías de tórax, se seleccionó \textbf{CheXNet} \citep{rajpurkar2017chexnet}, un modelo desarrollado por el grupo de investigación de la Universidad de Stanford en 2017. CheXNet se basa en una arquitectura DenseNet-121 de 121 capas entrenada sobre el conjunto de datos público \textit{ChestX-ray14}. Su objetivo es estimar la probabilidad de presencia de hasta 14 patologías torácicas distintas y generar mapas de activación de clase (\textit{Class Activation Maps}, CAM) que destacan espacialmente las regiones anómalas en la radiografía.
+
+\section{Evaluación del rendimiento de CheXNet en modalidad zero-shot}
+\label{sec:eval_chexnet}
+
+A partir de la cohorte local de radiografías etiquetadas, se evaluó el desempeño del modelo CheXNet en modalidad \textit{zero-shot}. Para ello, se estableció un proceso de alineación semántica entre la taxonomía local de 32 etiquetas clínicas (\textit{tags} extraídos de los informes en texto libre) y las 14 clases estandarizadas de CheXNet.
+
+Las reglas de correspondencia se definieron agrupando los hallazgos por región anatómica y tipo de alteración patológica (\autoref{lst:mapeo_chexnet}). Aquellas etiquetas locales referentes a hallazgos óseos, vasculares o dispositivos médicos (e.g., \texttt{aortic\_uncoiling}, \texttt{rib\_fracture}, \texttt{medical\_device}) fueron excluidas de la evaluación al no poseer una clase equivalente en el espacio de representación del modelo preentrenado.
+Tras aplicar este filtro de correspondencia, se conservaron únicamente aquellos pacientes que presentaban al menos una condición evaluable por la arquitectura de CheXNet. Dado que CheXNet fue entrenado exclusivamente con proyecciones frontales de tórax (Anteroposterior [AP] y Posteroanterior [PA]), las vistas laterales (LL) fueron excluidas de la evaluación.
+
+Los resultados de confianza promedio predicha por CheXNet sobre los casos positivos confirmados se resumen en la \autoref{tab:chexnet_confianza_positivos_appa}.
+
+\begin{table}[H]
+\centering
+\small
+\begin{tabular}{lrr}
+\toprule
+\textbf{Patología (Clase CheXNet)} & \textbf{Casos Reales ($N$)} & \textbf{Confianza Promedio (\%)} \\
+\midrule
+Cardiomegaly        & 310 & 39 $\pm$ 23 \\
+Consolidation       &  71 & 38 $\pm$ 18 \\
+Pneumonia           &  67 & 16 $\pm$ 21 \\
+Effusion            &  52 & 44 $\pm$ 26 \\
+Pleural Thickening  &  50 & 34 $\pm$ 18 \\
+Infiltration        &  47 & 45 $\pm$ 13 \\
+Fibrosis            &  37 & 51 $\pm$ 7 \\
+Atelectasis         &  23 & 47 $\pm$ 17 \\
+Nodule              &  20 & 46 $\pm$ 10 \\
+Emphysema           &  17 & 52 $\pm$ 2 \\
+Hernia              &  13 & 64 $\pm$ 31 \\
+Edema               &   5 & 10 $\pm$ 20 \\
+Pneumothorax        &   4 & 44 $\pm$ 11 \\
+Mass                &   1 & 86.9 \\
+\bottomrule
+\end{tabular}
+\caption{Confianza promedio y desviación estándar asignada por CheXNet en casos positivos confirmados (restringido a proyecciones frontales AP/PA).}
+\label{tab:chexnet_confianza_positivos_appa}
+\end{table}
+
+Los valores observados en la \autoref{tab:chexnet_confianza_positivos_appa} muestran niveles de certidumbre considerablemente bajos (la mayoría por debajo del $50\%$). Esto indica que el modelo padece un severo sesgo de dominio (\textit{Domain Shift}) al aplicarse sobre radiografías procedentes de un centro médico distinto al utilizado en su entrenamiento original (\textit{ChestX-ray14}) \citep{Tiu_et_al._2022} \citep{Drukker_et_al._2023}. Asimismo, una parte de este desajuste puede atribuirse a la variabilidad intrínseca en el etiquetado del dataset local, el cual fue extraído automáticamente mediante procesamiento de lenguaje natural sobre informes médicos sin la auditoría directa de un especialista radiólogo.
+
+\section{Introducción a los LLMs multimodales, Ollama y MedGemma}
+\label{sec:intro_mllm_medgemma}
+
+Un LLM (\textit{Large Language Model}) es un sistema de IA entrenado para comprender, resumir y generar texto mediante el aprendizaje de patrones probabilísticos sobre amplios corpus de datos. Aunque los LLMs tradicionales operan exclusivamente en el dominio textual, sus extensiones multimodales (\textit{Multimodal Large Language Models}, MLLMs o VLMs) incorporan la capacidad de razonar simultáneamente sobre distintas modalidades como imágenes, audio o video dentro de una misma arquitectura unificada.
+
+Estos modelos emplean codificadores visuales basados en \textit{Vision Transformers} (ViT), los cuales dividen las imágenes de entrada en una secuencia de parches (\textit{patches}) proyectados en un espacio latente común con los tokens de texto. Esta integración habilita tareas avanzadas como el procesamiento de preguntas sobre imágenes (\textit{Visual Question Answering}, VQA), la generación automatizada de descripciones (\textit{Image Captioning}) y la clasificación basada en instrucciones.
+
+En el ámbito biomédico, Google desarrolló la familia de modelos \textbf{MedGemma} \citep{sellergren2026medgemmatechnicalreport}, diseñada específicamente para la interpretación de texto clínico e imágenes radiológicas. Para la presente evaluación se seleccionaron dos variantes: el modelo optimizado de 4 mil millones de parámetros cuantizado a 6 bits (\texttt{medgemma-4b-it:q6}) y la versión completa más reciente (\texttt{medgemma:latest}). Ambas variantes se ejecutaron en un entorno de desarrollo local sobre una workstation con Linux equipada con una tarjeta gráfica NVIDIA GeForce RTX 3070 Ti mediante el motor Ollama, garantizando la privacidad de los datos de salud y reduciendo la dependencia de infraestructura en la nube \footnote{Nota metodológica: La variante denominada en el entorno de experimentación como 'latest' corresponde a la versión congelada del modelo descargada en la fecha de las corridas experimentales (con identificador interno de Ollama \texttt{9fe4e9a6c9bd}), garantizando la estabilidad de los pesos evaluados.}.
+
+\section{Evaluación del rendimiento de MedGemma en clasificación multietiqueta}
+\label{sec:eval_medgemma}
+
+Para evaluar las capacidades de diagnóstico de MedGemma, se ejecutaron procesos de inferencia sobre la cohorte local de radiografías. Al modelo se le proporcionó la lista de etiquetas clínicas del mapa de patologías (\textit{pathology map}) junto con instrucciones para asignar las patologías correspondientes a cada paciente en un arreglo estandarizado.
+
+Durante las pruebas iniciales con un \textit{prompt} conservador, el modelo exhibió un bajo nivel de sensibilidad (\textit{recall}), omitiendo múltiples hallazgos radiológicos evidentes. Al modificar la instrucción hacia un esquema más agresivo o exhaustivo, el modelo mejoró su capacidad de detección pero comenzó a incurrir en alucinaciones leves (generando patologías no presentes en los estudios de origen).
+
+Este comportamiento confirma la existencia de un compromiso estructural (\textit{trade-off}) entre sensibilidad y precisión en VLMs biomédicos: instrucciones detalladas favorecen la detección de anomalías frecuentes pero incrementan la tasa de falsos positivos. Para mantener un criterio de evaluación riguroso, se optó por un \textit{prompt} de conservadurismo moderado que priorizara evitar la invención de hallazgos inexistentes.
+
+\subsection{Preprocesamiento y estandarización de imágenes DICOM}
+
+Las imágenes médicas originales en formato DICOM poseen dimensiones heterogéneas y alta profundidad de bits. Para acondicionar estas radiografías al formato de entrada requerido por MedGemma sin degradar la información diagnóstica, se desarrolló un pipeline de preprocesamiento estandarizado.
+
+Como se detalla en el \autoref{lst:preprocesamiento_dicom}, el procedimiento abarca los siguientes pasos técnicos:
+
+\begin{enumerate}
+    \item \textbf{Normalización Fotométrica y Ajuste de VOI LUT:} Se aplica la transformación \textit{Value of Interest Look-Up Table} (\texttt{apply\_voi\_lut}) para mapear los valores de gris según los metadatos de la ventana médica. Si la interpretación fotométrica es \texttt{MONOCHROME1}, se invierte el rango de grises para garantizar la concordancia anatómica estándar (hueso en blanco, aire en negro).
+    \item \textbf{Redimensionamiento Espacial (\textit{Resampling}):} Cada radiografía se redimensiona a una resolución fija de $896 \times 896$ píxeles utilizando interpolación por relación de área (\texttt{cv2.INTER\_AREA}), un método óptimo para la reducción de escala (\textit{downsampling}) que previene la aparición de artefactos y preserva bordes estructurales.
+    \item \textbf{Preservación del Rango Dinámico y Formato de Salida:} Con el objetivo de conservar la resolución tonal original, se consulta la etiqueta DICOM \texttt{BitsStored}. Si la imagen original contiene una profundidad mayor a 8 bits (e.g., 12 bits habituales en radiografía digital), la matriz se escala linealmente al rango $[0, 65535]$ y se exporta como PNG de 16 bits (\texttt{uint16}). De lo contrario, se convierte a PNG de 8 bits (\texttt{uint8}).
+\end{enumerate}
+
+
+\subsection{Ingeniería de prompts e inyección de metadatos clínicos}
+
+Para guiar la clasificación multietiqueta en MedGemma, se diseñó un \textit{prompt} estructurado. Como se ilustra en el \autoref{lst:build_prompt}, el proceso inyecta dinámicamente los metadatos del paciente (sexo, edad y proyección radiográfica) para proveer contexto clínico. Posteriormente, impone directrices estrictas que restringen la respuesta a una ontología cerrada en formato JSON, prohibiendo la inferencia de patologías no observadas visualmente.
+
+
+\subsection{Procesamiento de salidas, validación de etiquetas y métricas globales}
+
+Para mitigar eventuales fallos de formato o términos fuera de vocabulario, se implementó una función de extracción robusta (\autoref{lst:extract_labels}). El algoritmo limpia las marcas Markdown, intenta parsear el objeto JSON y cuenta con un mecanismo de contingencia basado en expresiones regulares (\textit{regex}). Asimismo, aplica una regla de exclusión mutua: si se detecta cualquier anomalía patológica, se remueve automáticamente la etiqueta \texttt{normal}.
+
+
+Las métricas globales de desempeño obtenidas por ambas variantes de MedGemma sobre los $2\,818$ pacientes se presentan en la \autoref{tab:global_metrics}.
+
+\begin{table}[htbp]
+\centering
+\small
+\begin{tabular}{lcc}
+\hline
+\textbf{Métrica} & \textbf{MedGemma 4B (Q6)} & \textbf{MedGemma Latest} \\
+\hline
+Exact Match   & 0.3446 & 0.3382 \\
+Hamming Loss  & 0.0506 & 0.0506 \\
+Micro F1      & 0.3170 & 0.3090 \\
+Macro F1      & 0.0560 & 0.0557 \\
+\hline
+\end{tabular}
+\caption{Métricas globales de desempeño para \texttt{medgemma\_4b\_q6} y \texttt{medgemma\_latest} ($N = 2\,818$ pacientes).}
+\label{tab:global_metrics}
+\end{table}
+
+El análisis por patología individual para ambas variantes se detalla en las Tablas \ref{tab:q6_per_tag} y \ref{tab:latest_per_tag} del Apéndice.
+
+\section{Discusión y conclusiones del capítulo}
+\label{sec:discusion_ch3}
+
+Los experimentos de este capítulo permiten extraer dos conclusiones fundamentales sobre la aplicación de modelos de visión y lenguaje multimodales en entornos radiológicos locales:
+
+\begin{enumerate}
+    \item \textbf{Limitaciones de las CNNs Discriminativas en Zero-Shot:} El bajo nivel de confianza registrado por CheXNet ($<50\%$ en la mayoría de las clases) confirma la presencia de un desajuste de dominio (\textit{Domain Shift}) severo al evaluar modelos preentrenados sobre datasets externos sin un proceso de adaptación o ajuste fino (\textit{fine-tuning}).
+    \item \textbf{Incompatibilidad entre LLMs Multimodales y Clasificación Rígida:} MedGemma obtuvo un rendimiento modesto en términos de \textit{Macro F1} ($\approx 0.056$), condicionado por las restricciones de formato impuestas en el \textit{prompt}. Forzar a un LLM multimodal a comportarse como un clasificador multietiqueta restringido a etiquetas fijas degrada su capacidad de razonamiento lingüístico natural.
+\end{enumerate}
+
+Estos hallazgos motivan de manera directa la propuesta desarrollada en el \autoref{cap:Capitulo4}: en lugar de acotar la salida a un vocabulario rígido de etiquetas o confiar en modelos discriminativos externos, resulta necesario aprovechar la fluidez del lenguaje natural permitiendo que el modelo genere el informe radiológico completo de manera libre, aplicando técnicas de adaptación de dominio sobre la cohorte local.
+
+\end{document}

@@ -1,0 +1,19 @@
+\documentclass[../tesis.tex]{subfiles}
+\begin{document}
+
+\chapter*{Resumen}
+
+En los últimos años, los modelos fundacionales multimodales de visión y lenguaje (VLMs) han demostrado un gran potencial para la interpretación de imágenes médicas. Sin embargo, el desajuste de dominio (\textit{domain shift}), la falta de etiquetado experto en entornos locales y las estrictas exigencias de privacidad dificultan su transferencia clínica directa. Esta tesis aborda de forma integral la construcción de un marco metodológico reproducible que abarca desde la auditoría de un repositorio local hasta la evaluación de aproximaciones discriminativas, generativas y la integración de un sistema de diagnóstico asistido por computadora (CAD).
+
+En la etapa inicial, se auditó un dataset bruto de $16\,500$ radiografías de tórax, consolidando una cohorte de prueba de $2\,818$ pacientes con informes de referencia, junto con $14\,132$ estudios no etiquetados destinados a aprendizaje autosupervisado (SSL).
+
+Posteriormente, se evaluó el desempeño de modelos contrastivos (CheXzero) en tareas de recuperación e inferencia directa, identificando limitaciones por desplazamiento de dominio. Al forzar a modelos como CheXNet y MedGemma (4B Q6 y Latest) a realizar clasificación multietiqueta en esquemas rígidos (JSON), se observó una drástica degradación (\textit{Exact Match} de 34,46\% y \textit{Macro F1} de 0,056), confirmando que restringir la salida a una ontología cerrada afecta la capacidad de razonamiento del VLM.
+
+Para superar esta barrera, se implementó un paradigma de generación libre de informes evaluado mediante un LLM juez (\texttt{Qwen2.5-14B-Instruct}) desplegado en el supercomputador Clementina XXI (Intel XPU, \texttt{bfloat16}). La generación libre alcanzó un desempeño principal evaluado en bruto por el LLM juez de 0,69 en Micro F1 y 0,43 en Exact Match (para MedGemma 4B Q6). Adicionalmente, se condujo un análisis exploratorio de sesgo y discrepancia del juez sobre una submuestra de 100 casos; a partir de este análisis, se estimó una cota teórica superior sujeta a futura validación ciega por radiólogos, la cual proyecta un desempeño de hasta 75,00\% en Micro F1 y 59,00\% en Exact Match.
+
+Finalmente, se diseñó e integró un pipeline CAD operativo estructurado en tres etapas consecutivas: el preprocesamiento con normalización DICOM y CLAHE; la clasificación jerárquica mediante un \textit{backbone} ResNet-50 adaptado con SSL sobre las $14\,132$ imágenes locales y optimizado mediante \textit{fine-tuning} supervisado (alcanzando un AUC-ROC de 0,764 en clasificación binaria con umbral de Youden $t^*=0{,}3999$ y evaluando 14 patologías); y la síntesis de la conclusión clínica mediante un LLM local (\texttt{Qwen2.5:7b} en Ollama) gobernado por plantillas deterministas y mecanismos de respaldo (\textit{fallback}).
+
+Asimismo, los resultados obtenidos —caracterizados por un valor predictivo positivo moderado ($0{,}41$) en el entorno local a causa del desplazamiento de dominio— evidencian que el desarrollo no constituye una herramienta de diagnóstico autónomo lista para su uso clínico directo. Por el contrario, este trabajo demuestra que el verdadero valor de estos modelos reside en esquemas híbridos de soporte a la redacción, cuya seguridad y viabilidad operativa dependen estrictamente de un marco de supervisión humana en el bucle (\textit{Human-in-the-loop}).
+
+\end{document}
+

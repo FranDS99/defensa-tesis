@@ -1,0 +1,143 @@
+\documentclass[12pt,twoside,a4paper,spanish]{book}
+\usepackage[spanish, es-tabla]{babel}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}  
+
+% Paquetes matemáticos y de formato
+\usepackage{amsmath,amsfonts,amssymb}
+\usepackage{graphicx}
+\usepackage{subfiles}
+\usepackage[printonlyused]{acronym}
+\usepackage{subfigure}
+\usepackage{multirow}
+\usepackage{booktabs}
+\usepackage{longtable}
+\usepackage{float}
+\usepackage[counterclockwise]{rotating}
+
+% Código fuente
+\usepackage{listings}
+\usepackage{xcolor}
+
+\lstset{
+    basicstyle=\ttfamily\small,
+    breaklines=true,
+    frame=single,
+    numbers=left,
+    numberstyle=\tiny\color{gray},
+    keywordstyle=\color{blue},
+    commentstyle=\color{green!50!black},
+    stringstyle=\color{purple},
+    showstringspaces=false,
+    tabsize=2,
+    captionpos=b
+}
+
+\renewcommand{\lstlistingname}{Código}
+\renewcommand{\lstlistlistingname}{Índice de Códigos}
+\providecommand{\lstlistingautorefname}{Código}
+
+% Profundidad de numeración e índice
+\setcounter{secnumdepth}{3}
+\setcounter{tocdepth}{3}
+
+% Formatos de texto y citas
+\usepackage[normalem]{ulem}
+\usepackage{scrextend}
+\usepackage[square,numbers]{natbib}
+\usepackage{bibentry}
+
+% Márgenes
+\usepackage[top=2.54cm, bottom=2.54cm, left=2.54cm, right=2.54cm]{geometry}
+
+% Encabezados y pies de página (Configuración Global Unificada)
+\usepackage{fancyhdr}
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[LE,RO]{\thepage}
+\fancyhead[RE]{\slshape \leftmark}
+\fancyhead[LO]{\slshape \rightmark}
+\fancyfoot{}
+\renewcommand{\headrulewidth}{0.4pt}
+
+% Omitir la palabra "CAPÍTULO" y acortar el encabezado par
+\makeatletter
+\renewcommand{\chaptermark}[1]{\markboth{\thechapter.\ #1}{}}
+\makeatother
+
+% TikZ y diagramas (Consolidado en un solo bloque)
+\usepackage{fancybox}
+\usepackage{tikz}
+\usetikzlibrary{calc,shapes,arrows,decorations.pathreplacing}
+
+\tikzstyle{block} = [rectangle, draw, fill=white, text width=7em, text centered, rounded corners, minimum height=2.2em]
+\tikzstyle{line} = [draw, -latex']
+\tikzstyle{corchete} = [decoration={brace,amplitude=10pt, mirror, raise=0.3cm}]
+
+% Interlineado
+\renewcommand{\baselinestretch}{1.5}
+
+% Limpieza de páginas en blanco intermedio
+\clearpage{\pagestyle{empty}\cleardoublepage}
+\makeatletter
+\def\cleardoublepage{\clearpage\if@twoside \ifodd\c@page\else
+\hbox{}
+\vspace*{\fill}
+\begin{center}\end{center}
+\vspace{\fill}
+\thispagestyle{empty}
+\newpage
+\if@twocolumn\hbox{}\newpage\fi\fi\fi}
+\makeatother
+
+% Inclusión de PDF y Algoritmos
+\usepackage{pdfpages}
+\usepackage{algorithm}
+\floatname{algorithm}{Actividad}
+\usepackage{algpseudocode}
+\usepackage{algorithmicx}
+\algrenewcommand{\algorithmicrequire}{\textbf{Requerimientos:}}
+\algrenewcommand{\algorithmicif}{\textbf{si}}
+\algrenewcommand{\algorithmicthen}{\textbf{entonces}}
+\algrenewcommand{\algorithmicend}{\textbf{fin}}
+\algrenewcommand{\algorithmicfor}{\textbf{para}}
+\algrenewcommand{\algorithmicforall}{\textbf{para todo}}
+\algrenewcommand{\algorithmicdo}{\textbf{realizar}}
+\algrenewcommand{\algorithmicprocedure}{\textbf{actividad}}
+
+\hyphenation{Ba-ri-lo-che}
+
+% Hipervínculos (Siempre al final de los paquetes)
+\usepackage[hidelinks]{hyperref}
+
+\begin{document}
+
+\frontmatter
+
+\subfile{Tesis/portada}
+\subfile{Tesis/agradecimientos}
+\subfile{Tesis/dedicatoria}
+\subfile{Tesis/resumen}
+
+% Índices
+\tableofcontents
+\cleardoublepage
+
+\mainmatter
+
+% Subarchivos de Capítulos
+\subfile{Tesis/intro}
+\subfile{Tesis/cap1}
+\subfile{Tesis/cap2}
+\subfile{Tesis/cap3}
+\subfile{Tesis/cap4}
+\subfile{Tesis/cap5}
+\subfile{Tesis/conclusiones}
+
+% Apéndices y Bibliografía
+\subfile{Tesis/apendices}
+
+\bibliographystyle{plainnat}
+\bibliography{referencias}
+
+\end{document}

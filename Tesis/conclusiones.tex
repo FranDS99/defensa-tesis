@@ -1,0 +1,63 @@
+\documentclass[../tesis.tex]{subfiles}
+\begin{document}
+
+\chapter{Conclusiones, Limitaciones y Trabajo Futuro}
+
+\section{Conclusiones Generales}
+
+Esta tesis abordó la problemática del desajuste de dominio (\textit{domain shift}) y la falta de estructuración en los informes de radiología de tórax locales mediante el diseño, implementación y evaluación de un pipeline tripartito de Diagnóstico Asistido por Computadora (CAD). 
+
+Retomando la pregunta central de investigación, los resultados demuestran que la combinación de un curado riguroso de datos, preentrenamiento autosupervisado (SSL) sobre imágenes no etiquetadas locales y la síntesis guiada por modelos de lenguaje permite mitigar significativamente el domain shift, consolidando un prototipo de investigación orientado al soporte y la redacción asistida, no validado para uso clínico ni para priorización autónoma.
+
+Las principales conclusiones derivadas de este trabajo son:
+
+\begin{enumerate}    
+    \item \textbf{Curado y Filtro Binario Operacional:} A partir de un repositorio crudo de $16\,541$ expedientes, el filtrado y estructuración del texto permitió aislar $6\,123$ estudios válidos [\autoref{sec:auditoria_intro}]. El primer modelo de clasificación binaria alcanzó un Valor Predictivo Negativo (VPN) del $89{,}4\%$ (con una sensibilidad del $67{,}0\%$ y una especificidad del $73{,}0\%$ bajo un umbral $t^* = 0{,}3999$) [\autoref{tab:resultados_binarios}]. Si bien el VPN obtenido es numéricamente elevado (en gran medida condicionado por la alta proporción de estudios normales en la cohorte), la sensibilidad observada refleja que una fracción sustancial de los casos patológicos no sería identificada por el sistema. Por su parte, el Valor Predictivo Positivo (VPP) del $41{,}0\%$ posiciona las alertas del sistema como llamadas de atención preventivas que requieren validación radiológica obligatoria. En consecuencia, este desarrollo se presenta exclusivamente como un prototipo de investigación, no validado para su uso clínico ni para la priorización o el descarte autónomo de estudios. 
+    
+    \item \textbf{Comportamiento bajo Diferentes Formatos de Salida (Análisis Exploratorio):} Se documentó el desempeño de los modelos bajo esquemas de clasificación estructurada y de generación en texto libre asistida por un LLM juez [\autoref{tab:global_metrics}] y [\autoref{tab:benchmark_corregido}]. Dado que en dicha comparación varían concurrentemente la formulación de la tarea, la estrategia de referencia y el método de evaluación, estos hallazgos se presentan de forma estrictamente exploratoria para describir la respuesta de los MLLMs ante diferentes requerimientos de salida, evitando inferir una superioridad metodológica global. 
+
+    \item \textbf{Adaptación de Dominio mediante SSL:} El preentrenamiento autosupervisado sobre 14132 radiografías locales no etiquetadas mediante ResNet-50 [\autoref{Seccion SSL}] contribuyó de manera efectiva a la adaptación de la extracción de características visuales a la instrumentación local, logrando un $AUC-ROC$ de $0{,}7640$ en la etapa binaria supervisada, asegurando una estricta separación de pacientes respecto de la cohorte de evaluación.
+\end{enumerate}
+
+\section{Limitaciones del Trabajo}
+
+Para brindar una visión crítica y transparente, las limitaciones del proyecto se consolidan en cuatro ejes principales:
+
+\begin{enumerate}
+    \item \textbf{Artefactos de Preprocesamiento de Imágenes:}
+    \begin{itemize}
+        \item \textit{Recorte Central (Central Crop):} La adaptación del tamaño de imagen mediante recorte central podría haber eliminado inadvertidamente información anatómica periférica sensible, como los ápices pulmonares y los ángulos costofrénicos [\autoref{sec:Preprocesamiento, Carga y Estandarización de Datos}]. Esto podria haber afectado directamente la sensibilidad en la detección de patologías periféricas como neumotórax ($25{,}0\%$) y derrame pleural ($0{,}0\%$ en el test acotado).
+        \item \textit{Ecualización CLAHE:} La aplicación de ecualización adaptativa de histográmas con límite de contraste (CLAHE) amplificó el ruido local de alta frecuencia y alteró los bordes finos [\autoref{sec:Preprocesamiento, Carga y Estandarización de Datos}]. Dado que las redes preentrenadas de referencia (\textit{TorchXRayVision}) no utilizaron CLAHE en su entrenamiento original, su inclusión en el pipeline podría haber resultado contraproducente para patologías de textura suave.
+    \end{itemize}
+
+    \item \textbf{Desajuste de Dominio y Ausencia de Ensambles:}
+    Al entrenar los clasificadores supervisados utilizando la base pública externa NIH ($112\,120$ imágenes) [\autoref{sec:Diseño del flujo de trabajo}] y probar directamente sobre la cohorte local sin un \textit{Fine-Tuning} supervisado profundo con datos locales, persistió una brecha de rendimiento (\textit{domain shift}). Asimismo, a diferencia de las metodologías que lideran los \textit{benchmarks} públicos mediante el promedio de predicciones de ensambles de $10$ redes neuronales, este trabajo evaluó modelos individuales por limitaciones de cómputo supervisado.
+
+    \item \textbf{Ausencia de Consenso Radiológico Directo y Muestra Acotada:}
+    El \textit{ground truth} utilizado derivó de la extracción automatizada de textos históricos mediante filtros de frases [\autoref{sec:estrategias_retrieval}], sin una re-evaluación médica directa a ciegas por un comité de radiólogos. Adicionalmente, ciertas clases diagnósticas presentaron un tamaño muestral críticamente bajo en la cohorte de prueba (p. ej., Neumotórax $N=4$, Masa $N=1$, Derrame $N=3$), lo que dificulta la generalización estadística en patologías poco frecuentes.
+
+    \item \textbf{Falta de Metadatos Clínicos e Integración Multimodal:}
+    El diagnóstico automático se fundamentó exclusivamente en la información píxel-nivel del archivo DICOM, omitiendo variables clínicas determinantes como antecedentes del paciente, motivo de consulta, laboratorio o estudios previos.
+\end{enumerate}
+
+\section{Trabajo Futuro y Propuesta Superadora}
+
+Con el fin de elevar el desempeño del sistema hacia niveles de producción clínica y superar las limitaciones identificadas, se propone la siguiente hoja de ruta:
+
+\begin{enumerate}
+    \item \textbf{Corrección del Preprocesamiento Anatómico:} Sustituir el recorte central por técnicas de deformación adaptativa con preservación de aspecto (\textit{padding} y \textit{resizing}) para asegurar la visibilidad completa de ápices y senos costofrénicos, así como desactivar la ecualización CLAHE para backbones no adaptados a dicho filtro.
+
+    \item \textbf{Migración a Arquitecturas de Alta Resolución (Ark+):} Incorporar modelos de última generación visión-lenguaje de código abierto, como \textit{Ark+}, los cuales procesan imágenes a mayor resolución espacial y superan la extracción de características tradicional \citep{ark_nature_2025,jlianglab_ark_repo}.
+
+    \item \textbf{Ajuste Fino Local y Aprendizaje Federado:} Implementar un protocolo de \textit{Fine-Tuning} supervisado utilizando exclusivamente datos localmente curados. Para ello, se estructurará un dataset balanceado de entre $1\,000$ y $3\,000$ imágenes DICOM locales, distribuido según el siguiente esquema óptimo:
+    \begin{itemize}
+        \item \textit{Casos Normales ($40\%$):} $\approx 400\text{ a }1\,200$ radiografías sin hallazgos.
+        \item \textit{Patologías Estructurales/Macroscópicas ($25\%$):} Cardiomegalia, Derrame Pleural y Atelectasia ($100\text{ a }200$ casos confirmados por clase).
+        \item \textit{Patologías de Textura y Contraste Suave ($25\%$):} Neumonía, Infiltrados y Consolidación ($150\text{ a }300$ casos por clase).
+        \item \textit{Patologías Críticas/Raras ($10\%$):} Hernias, Neumotórax, Nódulos y Masas ($20\text{ a }50$ casos en régimen \textit{Few-Shot}).
+    \end{itemize}
+
+    \item \textbf{Consenso Multiexperto para el \textit{Ground Truth}:} Someter la cohorte de ajuste fino a la revisión independiente de $2$ a $3$ radiólogos de la institución, resolviendo las discrepancias por consenso para garantizar un criterio médico unificado y alineado con los estándares locales.
+\end{enumerate}
+
+\end{document}

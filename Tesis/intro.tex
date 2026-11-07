@@ -1,0 +1,34 @@
+\documentclass[../main.tex]{subfiles} % o ../tesis.tex según el nombre de tu main
+\begin{document}
+
+\chapter*{Introducción}
+\addcontentsline{toc}{chapter}{Introducción}
+\markboth{Introducción}{Introducción} % Actualiza los encabezados izquierdo y derecho
+
+La radiografía de tórax es uno de los estudios por imágenes más frecuentes en la práctica clínica. Su bajo costo, amplia disponibilidad y elevada utilidad diagnóstica generan volúmenes masivos de datos, convirtiéndola en un escenario crítico para el desarrollo de herramientas de inteligencia artificial. En forma paralela, la digitalización hospitalaria ha consolidado la disponibilidad de imágenes en formato DICOM e informes médicos en texto libre, impulsando el desarrollo de modelos multimodales que integran información visual y lingüística \citep{1ref}.
+
+Los avances recientes en inteligencia artificial generativa y modelos fundacionales visión-lenguaje (VLMs) han demostrado capacidad para vinculación de hallazgos visuales con descripciones clínicas \citep{2ref,Doshi_et_al._2024}. Sin embargo, la literatura reciente enfatiza que su transferencia a la práctica real enfrenta cuellos de botella severos: la necesidad de un curado riguroso de datos y pipelines reproducibles \citep{4ref,5ref}, así como la presencia de sesgos algorítmicos cuando los conjuntos de entrenamiento no son suficientemente representativos \citep{Drukker_et_al._2023}. A esto se suma que exigir a los VLMs clasificaciones estructuradas o rígidas suele limitar su capacidad de razonamiento en comparación con la generación libre.
+
+Ante estas limitaciones, el uso de repositorios locales exige un abordaje integral que combine curado exhaustivo, aprendizaje autosupervisado (SSL) y estrategias asistidas de evaluación. Este trabajo utiliza una base local de $16\,500$ radiografías de tórax en formato DICOM con sus respectivos informes textuales, a partir de la cual se consolidó una cohorte de prueba de $2\,818$ casos y un conjunto no etiquetado de $14\,132$ estudios para preentrenamiento.
+
+A partir de esta cohorte, la presente tesis aborda la siguiente pregunta central: \textquestiondown hasta qué punto un pipeline que integre curado exhaustivo, preentrenamiento autosupervisado local y la síntesis guiada por modelos de lenguaje puede superar las limitaciones del \textit{domain shift} y ofrecer un sistema de diagnóstico asistido por computadora (CAD) confiable y clínicamente útil?
+
+Para responderla, esta investigación evalúa el desempeño de arquitecturas contrastivas y generativas, analiza la degradación del rendimiento bajo esquemas de salida cerrados, propone un marco de evaluación semántica mediante un LLM juez en un entorno de alto rendimiento (HPC) y culmina con la implementación de un sistema CAD funcional orientado a la redacción asistida de hallazgos.
+
+\section*{Objetivos}
+
+\textbf{Objetivo General}
+\begin{itemize}
+    \item Diseñar, implementar y evaluar un pipeline integral de Diagnóstico Asistido por Computadora (CAD) para radiografías de tórax que mitigue el desajuste de dominio (\textit{domain shift}) mediante curado riguroso de datos, preentrenamiento autosupervisado (SSL) local y generación/evaluación asistida por modelos de lenguaje.
+\end{itemize}
+
+\textbf{Objetivos Específicos}
+\begin{enumerate}
+    \item Auditar y consolidar el repositorio clínico local ($16\,541$ expedientes crudos) para estructurar una cohorte balanceada de evaluación ($N = 2\,818$) y un conjunto no etiquetado ($N = 14\,132$) destinado a adaptación de dominio.
+    \item Evaluar empíricamente la capacidad de recuperación y clasificación \textit{zero-shot} de modelos visión-lenguaje (VLMs) y redes neuronales convolucionales (CNNs) preentrenadas sobre la cohorte local.
+    \item Cuantificar la degradación en el razonamiento diagnóstico de modelos de lenguaje multimodales (MLLMs) al imponer esquemas de salida estructurados rígidos frente a la generación en texto libre.
+    \item Implementar un protocolo de evaluación semántica automatizada mediante un LLM juez desplegado en infraestructura de alto rendimiento (HPC), auditando sus sesgos y discrepancias con métricas tradicionales.
+    \item Integrar un pipeline CAD modular de tres etapas (preprocesamiento, clasificación por \textit{Fine-Tuning} sobre SSL local y redacción asistida) cuantificando su rendimiento diagnóstico global.
+\end{enumerate}
+
+\end{document}

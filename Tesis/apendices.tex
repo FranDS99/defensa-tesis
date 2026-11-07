@@ -1,0 +1,609 @@
+\documentclass[../main.tex]{subfiles}
+\begin{document}
+
+\cleardoublepage
+\chapter*{Apéndices}
+\addcontentsline{toc}{chapter}{Apéndices}
+\markboth{Apéndices}{Apéndices}
+
+\section*{Especificaciones del Entorno de Ejecución y Librerías Principales}
+Para garantizar la total reproducibilidad computacional, los scripts de procesamiento de imágenes, entrenamiento de redes y evaluación local se ejecutaron bajo un entorno aislado de Anaconda (\texttt{Python 3.11.15}) sobre Linux. Las versiones de las bibliotecas críticas empleadas en el pipeline se detallan a continuación:
+\begin{itemize}
+    \item \textbf{Deep Learning \& Visión:} \texttt{torch} (v2.5.1+cu121), \texttt{torchvision} (v0.20.1+cu121), \texttt{torchxrayvision} (v1.5.2), \texttt{timm} (v1.0.26), \texttt{opencv-python-headless} (v4.13.0).
+    \item \textbf{Procesamiento DICOM y Datos:} \texttt{pydicom} (v3.0.2), \texttt{numpy} (v2.4.4), \texttt{pandas} (v3.0.2), \texttt{scikit-learn} (v1.8.0), \texttt{scikit-image} (v0.26.0).
+    \item \textbf{NLP e Interfaz LLM:} \texttt{transformers} (v5.12.1), \texttt{sentence-transformers} (v5.4.1), \texttt{ollama} (v0.6.2).
+\end{itemize}
+Las ejecuciones locales se aceleraron mediante una tarjeta gráfica NVIDIA GeForce RTX 3070 Ti (8 GB VRAM, Driver 570.133, CUDA 12.8), mientras que las evaluaciones masivas de los modelos de lenguaje juez se delegaron al supercomputador Clementina XXI.
+
+\section*{Reproducibilidad y Control de Semillas Aleatorias}
+Para garantizar la reproducibilidad estricta de todos los experimentos informados en este trabajo, se fijó una semilla global única ($seed = 42$) en todas las etapas de procesamiento, partición de datos y entrenamiento de modelos. Las bibliotecas principales se inicializaron de forma consistente mediante:
+\begin{itemize}
+    \item \texttt{np.random.seed(42)} para las operaciones estocásticas en NumPy.
+    \item \texttt{torch.manual\_seed(42)} y \texttt{torch.cuda.manual\_seed\_all(42)} para la inicialización de pesos y generadores de números pseudoaleatorios en PyTorch (tanto en CPU como en aceleradores XPU/GPU).
+    \item \texttt{random\_state = 42} en las funciones de división de conjuntos de datos (\texttt{train\_test\_split}) y en los algoritmos de agrupamiento espacial.
+\end{itemize}
+
+
+\begin{lstlisting}[language=Python, caption={Algoritmo de limpieza de texto y remoción de metadatos ruidosos en los informes.}, label={code:filtro}]
+import re
+
+# Patrones para identificar metadatos medicos, matriculas y encabezados
+DOCTOR_PATTERNS = [r"DR\..*", r"MN\s*\d+", r"MP\s*\d+"]
+TITLE_PATTERNS = [r"^\s*THORAX\s*", r"^\s*CHEST\s*X-RAY\.?\s*", r"^\s*RX\s*"]
+SECTION_PATTERNS = ["RODILLA", "COLUMNA", "CRANEO", "ABDOMEN"]
+
+def limpiar_texto(texto):
+    texto = texto.replace("\ufeff", " ").replace("\n", " ")
+
+    # Eliminacion de nombres de medicos, matriculas y titulos ruidosos
+    for patron in DOCTOR_PATTERNS + TITLE_PATTERNS:
+        texto = re.sub(patron, " ", texto, flags=re.IGNORECASE)
+
+    # Truncado de secciones anatomicas no toracicas presentes en el informe
+    corte = len(texto)
+    for patron in SECTION_PATTERNS:
+        regex = rf"(?:RIGHT|LEFT|BILATERAL)?\s*{patron}"
+        match = re.search(regex, texto, flags=re.IGNORECASE)
+        if match:
+            corte = min(corte, match.start())
+
+    texto = texto[:corte]
+    return re.sub(r"\s+", " ", texto).strip(" .,:;-")
+\end{lstlisting}
+
+\begin{lstlisting}[language=Python, caption={Generación de embeddings semánticos a partir de los informes traducidos.}, label={code:clustering_embeddings}]
+from sentence_transformers import SentenceTransformer
+
+# Inicialización del modelo vectorial para representaciones semanticas
+model = SentenceTransformer("all-MiniLM-L6-v2")
+
+# Generacion de embeddings en lotes para optimizacion de VRAM
+embeddings = model.encode(
+    informes,
+    batch_size=32,
+    show_progress_bar=True
+)
+\end{lstlisting}
+
+\begin{lstlisting}[language=Python, caption={Agrupamiento semántico mediante el algoritmo DBSCAN con métrica coseno.}, label={code:clustering}]
+import numpy as np
+from sklearn.cluster import DBSCAN
+
+# Carga de vectores de caracteristicas y agrupamiento por densidad
+embeddings = np.load("embeddings_filtrado_v2.npy")
+
+clustering = DBSCAN(
+    eps=0.04,
+    min_samples=2,
+    metric="cosine"
+).fit(embeddings)
+
+labels = clustering.labels_
+\end{lstlisting}
+
+\begin{lstlisting}[language=Python, caption={Carga de la arquitectura base CLIP e inyección de pesos de CheXzero.}, label={code:chexzero_load}]
+import torch
+import clip
+
+# Inicializacion de CLIP (ViT-B/32) e inyeccion de pesos especializados
+device = "cuda" if torch.cuda.is_available() else "cpu"
+model, preprocess = clip.load("ViT-B/32", device=device, jit=False)
+
+checkpoint = torch.load(CHECKPOINT_PATH, map_location=device)
+state_dict = checkpoint.get("model_state_dict", checkpoint)
+model.load_state_dict(state_dict, strict=False)
+model.eval()
+\end{lstlisting}
+
+\begin{lstlisting}[language=Python, caption={Carga y normalización de intensidad de imágenes DICOM.}, label={code:dicom_preprocessing}]
+import pydicom
+import numpy as np
+from PIL import Image
+
+def cargar_dicom(path):
+    ds = pydicom.dcmread(path)
+    img = ds.pixel_array.astype(np.float32)
+
+    # Normalizacion lineal al rango [0, 1] y conversion a uint8 RGB
+    img = (img - img.min()) / (img.max() - img.min() + 1e-8)
+    img = (img * 255).astype(np.uint8)
+    return Image.fromarray(img).convert("RGB")
+\end{lstlisting}
+
+\begin{lstlisting}[language=Python, caption={Extracción de embeddings multimodales con pooling visual y normalización L2.}, label={code:embedding_generation}]
+with torch.no_grad():
+    # 1. Rama Visual: Codificacion y pooling de multiples vistas
+    tensors = torch.stack([preprocess(img) for img in imagenes]).to(device)
+    img_emb = model.encode_image(tensors).mean(dim=0)  # Promedio de vistas
+    img_emb = img_emb / img_emb.norm()                # Normalizacion L2
+
+    # 2. Rama Textual: Tokenizacion truncada y codificacion
+    tokens = clip.tokenize([report_text], truncate=True).to(device)
+    rep_emb = model.encode_text(tokens)[0]
+    rep_emb = rep_emb / rep_emb.norm()                # Normalizacion L2
+\end{lstlisting}
+
+\begin{lstlisting}[language=Python, caption={Evaluación de métricas de retrieval estricto y supervisado.}, label={code:retrieval_eval}]
+# Evaluacion del ranking por similitud coseno
+N = len(pacientes)
+top1, top5 = 0, 0
+jaccard_scores = []
+
+for i in range(N):
+    ranking = np.argsort(-sim_matrix[i])  # Orden descendente
+    
+    # 1. Recuperacion Estricta (Coincidencia exacta)
+    if ranking[0] == i: top1 += 1
+    if i in ranking[:5]: top5 += 1
+    
+    # 2. Recuperacion Supervisada (Indice de Jaccard en Top-1)
+    jac = jaccard_similarity(all_labels[i], all_labels[ranking[0]])
+    jaccard_scores.append(jac)
+
+accuracy_top1 = top1 / N
+mean_jaccard_top1 = np.mean(jaccard_scores)
+\end{lstlisting}
+
+\begin{lstlisting}[language=Python, caption={Diccionario de mapeo sistemático de etiquetas locales a la taxonomía de CheXNet.}, label={lst:mapeo_chexnet}]
+tag_to_chexnet_mapping = {
+    # --- CARDIOVASCULAR ---
+    "cardiomegaly": ["Cardiomegaly"],
+    "borderline_cardiac_size": ["Cardiomegaly"],
+    
+    # --- PLEURA ---
+    "pleural_effusion": ["Effusion"],
+    "costophrenic_blunting": ["Effusion"],
+    "pleural_adhesions": ["Pleural_Thickening"],
+    "pleural_calcifications": ["Pleural_Thickening"],
+    
+    # --- PARENQUIMA, INFECCIONES Y OPACIDADES ---
+    "alveolar_condensation_or_airspace_opacity": ["Consolidation", "Pneumonia"],
+    "nonspecific_basal_opacity": ["Consolidation"],
+    "atelectasis": ["Atelectasis"],
+    "pulmonary_congestion": ["Edema"],
+    "pulmonary_fibrotic_sequelae": ["Fibrosis"],
+    "interstitial_abnormality": ["Infiltration"],
+    
+    # --- NODULOS Y MASAS ---
+    "pulmonary_nodule": ["Nodule"],
+    "pulmonary_metastases": ["Mass"],
+    
+    # --- OTROS HALLAZGOS ---
+    "pneumothorax": ["Pneumothorax"],
+    "emphysema": ["Emphysema"],
+    "bullae": ["Emphysema"],
+    "hiatal_hernia": ["Hernia"]
+}
+\end{lstlisting}
+
+\begin{lstlisting}[language=Python, caption={Pipeline de lectura, redimensionamiento espacial y conversión de DICOM a PNG de alta resolución.}, label={lst:preprocesamiento_dicom}]
+TARGET_SIZE = (896, 896)
+
+def cargar_dicom_preservando_bits(dcm_path):
+    ds = pydicom.dcmread(dcm_path)
+    try:
+        img = apply_voi_lut(ds.pixel_array, ds)
+    except Exception:
+        img = ds.pixel_array
+
+    img = img.astype(np.float32)
+    if getattr(ds, "PhotometricInterpretation", "") == "MONOCHROME1":
+        img = img.max() - img
+    return img, ds
+
+def resize_preservando_rango(img):
+    return cv2.resize(img, TARGET_SIZE, interpolation=cv2.INTER_AREA)
+
+def guardar_png(img, ds, output_path):
+    bits_stored = int(getattr(ds, "BitsStored", 8))
+    img = img - img.min()
+    if img.max() > 0:
+        img = img / img.max()
+
+    if bits_stored <= 8:
+        img_out = (img * 255).round().astype(np.uint8)
+    else:
+        img_out = (img * 65535).round().astype(np.uint16)
+
+    cv2.imwrite(str(output_path), img_out)
+\end{lstlisting}
+
+\begin{lstlisting}[language=Python, caption={Construcción del prompt combinando metadatos del paciente y reglas estrictas de clasificación.}, label={lst:build_prompt}]
+def build_prompt(metadata):
+    metadata_lines = []
+    if metadata["sex"]:
+        metadata_lines.append(f"Sex: {metadata['sex']}")
+    if metadata["age"]:
+        metadata_lines.append(f"Age: {metadata['age']}")
+    if metadata["view_position"]:
+        metadata_lines.append(f"ViewPosition: {metadata['view_position']}")
+
+    metadata_block = "\n".join(metadata_lines) if metadata_lines else "No metadata available."
+
+    return f"""
+You are an expert thoracic radiologist performing a MULTI-LABEL CLASSIFICATION task.
+This is NOT a report generation task.
+
+Patient metadata:
+{metadata_block}
+
+Your objective is to identify radiographic findings that are CLEARLY VISIBLE in the chest radiograph.
+Systematically inspect: 
+1. Cardiac silhouette ... [Anatomical zones] ... 13. Postsurgical changes
+
+Ontology:
+{TAGS_TEXT}
+
+IMPORTANT RULES:
+- Use ONLY labels from the ontology.
+- Never invent labels.
+- Include a label ONLY when the finding is clearly visible on the radiograph.
+- Do NOT infer findings from age, prevalence, clinical expectations, or associations.
+- If ANY ontology finding is present, do NOT include "normal".
+- Use "normal" ONLY when no ontology finding is clearly visible.
+
+Return ONLY a JSON array. Examples: ["normal"], ["aortic_uncoiling", "cardiomegaly"]
+No markdown. No explanations.
+"""
+\end{lstlisting}
+
+\begin{lstlisting}[language=Python, caption={Algoritmo de extracción de etiquetas, manejo de errores y validación lógica.}, label={lst:extract_labels}]
+def extract_labels(raw_response):
+    text = raw_response.strip()
+    text = text.replace("```json", "").replace("```", "")
+    labels = set()
+
+    # Intento de parseo directo del JSON
+    try:
+        parsed = json.loads(text)
+        if isinstance(parsed, list):
+            for item in parsed:
+                if item in VALID_LABELS:
+                    labels.add(item)
+    except Exception:
+        pass
+
+    # Respaldo mediante Expresiones Regulares para capturar texto libre
+    lower_text = text.lower()
+    for label in VALID_LABELS:
+        if re.search(rf"\b{re.escape(label.lower())}\b", lower_text):
+            labels.add(label)
+
+    labels = sorted(labels)
+
+    # Logica de exclusion mutua para pacientes sanos
+    if len(labels) == 0:
+        labels = ["normal"]
+    if "normal" in labels and len(labels) > 1:
+        labels.remove("normal")
+
+    return labels
+\end{lstlisting}
+
+\begin{lstlisting}[language=Python, caption={Estructuración del prompt para la generación restringida de informes radiológicos con MedGemma.}, label={lst:prompt_informes}]
+def construir_prompt(sex, views_block):
+    prompt = f"""
+You are an expert thoracic radiologist specialized in chest X-ray interpretation.
+Analyze the provided chest radiographs using only clearly visible findings.
+
+Patient information:
+- Sex: {sex}
+- Modality: CR
+
+Available radiographic views:
+{views_block}
+
+Possible findings may include:
+[Se listan categorias: pulmonares, pleurales, cardiovasculares, oseas y dispositivos]
+
+Generate ONLY a concise professional radiology report.
+
+STRICT RULES:
+- Maximum 4 short sentences. Use concise radiological language and minimalist style.
+- Mention only findings confidently visible on the radiographs.
+- False positive findings are worse than omitted findings. If uncertain, do NOT mention.
+- Do NOT force abnormalities into the report. Avoid generic phrases ("lungs are clear").
+- Report chronic findings, calcifications, and devices only if unmistakably visible.
+- Do NOT hallucinate devices, explain findings, or generate recommendations.
+- Stop immediately after the report.
+
+Preferred reporting style examples:
+- No active parenchymal processes are observed.
+- Aorta uncoiled.
+- Calcified aortic atheroma.
+"""
+    return prompt
+\end{lstlisting}
+
+\begin{lstlisting}[language=Python, caption={Invocación del VLM a través de la API de Ollama especificando hiperparámetros de generación.}, label={lst:ollama_inference}]
+# Invocacion del modelo especificando hiperparametros de decodificacion
+response = chat(
+    model=MODEL_NAME,
+    messages=[
+        {
+            "role": "user",
+            "content": prompt,
+            "images": image_paths
+        }
+    ],
+    options={
+        "temperature": 0.1,
+        "num_predict": 120
+    }
+)
+
+# Extraccion y normalizacion basica del informe generado
+report = response["message"]["content"].strip()
+report = report.replace("\n", " ")
+report = " ".join(report.split())
+\end{lstlisting}
+
+\begin{lstlisting}[language=Python, caption={Construcción del prompt del LLM Juez para la extracción de métricas semánticas (TP, FP, FN).}, label={lst:prompt_juez}]
+def construir_prompt(informe_original, informe_medgemma, informe_medgemma15):
+    return f"""
+/no_think
+You are an expert thoracic radiologist.
+Your task is to compare generated reports against the original report.
+Evaluate only clinically meaningful findings.
+
+IMPORTANT:
+- Use semantic equivalence.
+- Different wording describing the same pathology must be considered equivalent.
+- Ignore style, grammar, report length and formatting.
+- Ignore normal findings unless they explicitly contradict an abnormal finding.
+
+NON-PATHOLOGICAL EXCLUSIONS:
+The following expressions are anatomical descriptors or normal findings and MUST be ignored:
+- right/left diaphragmatic dome, preserved cardiothoracic ratio, correctly aligned spine
+- no pleural effusion, no pneumothorax, no acute pulmonary findings, lungs are clear.
+These expressions must never generate tp, fn or fp.
+
+CONTRADICTION RULE:
+If a generated report explicitly states the opposite of an abnormal finding:
+- original finding -> fn
+- contradictory generated finding -> fp
+
+ORIGINAL REPORT:
+----------------
+{informe_original}
+
+MODEL A REPORT (medgemma_4b_q6):
+---------------
+{informe_medgemma}
+
+MODEL B REPORT (medgemma_latest):
+---------------
+{informe_medgemma15}
+
+Return ONLY a single valid JSON object with structure:
+{{
+  "model_a": {{"tp": [], "fn": [], "fp": []}},
+  "model_b": {{"tp": [], "fn": [], "fp": []}}
+}}
+"""
+\end{lstlisting}
+
+\begin{lstlisting}[language=bash, caption={Script de trabajo SLURM para el despliegue del pipeline de evaluación en Clementina XXI utilizando aceleradores Intel XPU.}, label={lst:slurm_script}]
+#!/bin/bash
+#SBATCH --job-name=rendimientos_qwen_juez
+#SBATCH --output=/data/contrib/pci_127/proyectos/Qwen-juez/out_rendimientos_%j.out
+#SBATCH --error=/data/contrib/pci_127/proyectos/Qwen-juez/err_rendimientos_%j.err
+#SBATCH --account=pci_127
+#SBATCH --partition=batch
+#SBATCH --time=10:00:00
+#SBATCH --cpus-per-task=16
+#SBATCH --mem=128G
+#SBATCH --gres=gpu:intel_xt1550:1
+
+# Carga de modulos y runtime Intel oneAPI
+module purge
+source /data/shared/oneapi/2025.3/setvars.sh --force
+source /data/contrib/pci_127/miniconda_fase3/etc/profile.d/conda.sh
+conda activate clementina_fase3
+
+# Configuracion de variables de entorno para aceleracion XPU
+unset LD_LIBRARY_PATH
+export LD_LIBRARY_PATH="/data/contrib/pci_127/miniconda_fase3/envs/clementina_fase3/lib:$LD_LIBRARY_PATH"
+export SYCL_PI_LEVEL_ZERO_USE_IMMEDIATE_COMMANDLISTS=1
+export ZE_AFFINITY_MASK=0
+export ONEAPI_DEVICE_SELECTOR=level_zero:gpu
+
+# Ejecucion del script de evaluacion semantica
+cd /data/contrib/pci_127/proyectos/Qwen-juez
+python generar_rendimientos.py
+\end{lstlisting}
+
+\begin{longtable}{lr}
+\hline
+\textbf{Etiqueta Clínica (Tag)} & \textbf{Frecuencia Absoluta ($N$)} \\ \hline
+\endfirsthead
+
+\multicolumn{2}{c}{\textit{(Continuación de la página anterior)}} \\ \hline
+\textbf{Etiqueta Clínica (Tag)} & \textbf{Frecuencia Absoluta ($N$)} \\ \hline
+\endhead
+
+\hline \multicolumn{2}{r}{\textit{(Continúa en la siguiente página)}} \\
+\endfoot
+
+\hline
+\textbf{Total de apariciones} & \textbf{3.737} \\ \hline
+\caption{Distribución completa de frecuencia de los 32 tags únicos en el conjunto total de pacientes analizados ($N = 2.818$).}
+\label{tab:apendice_tags_completos} 
+\endlastfoot
+
+\texttt{aortic\_uncoiling} & 1.200 \\
+\texttt{normal} & 971 \\
+\texttt{aortic\_calcification} & 413 \\
+\texttt{breast\_implants} & 176 \\
+\texttt{cardiomegaly} & 160 \\
+\texttt{borderline\_cardiac\_size} & 152 \\
+\texttt{postsurgical\_changes} & 67 \\
+\texttt{alveolar\_condensation\_or\_airspace\_opacity} & 67 \\
+\texttt{tracheobronchial\_calcification} & 51 \\
+\texttt{costophrenic\_blunting} & 51 \\
+\texttt{vertebral\_compression\_deformity} & 50 \\
+\texttt{interstitial\_abnormality} & 47 \\
+\texttt{pleural\_adhesions} & 40 \\
+\texttt{pulmonary\_calcifications} & 38 \\
+\texttt{pulmonary\_fibrotic\_sequelae} & 38 \\
+\texttt{medical\_device} & 37 \\
+\texttt{scoliosis} & 32 \\
+\texttt{atelectasis} & 23 \\
+\texttt{pulmonary\_nodule} & 20 \\
+\texttt{hemidiaphragm\_elevation} & 18 \\
+\texttt{emphysema} & 16 \\
+\texttt{pectus\_excavatum} & 14 \\
+\texttt{hiatal\_hernia} & 13 \\
+\texttt{rib\_fracture} & 12 \\
+\texttt{pleural\_calcifications} & 10 \\
+\texttt{nonspecific\_basal\_opacity} & 6 \\
+\texttt{pulmonary\_congestion} & 5 \\
+\texttt{pneumothorax} & 4 \\
+\texttt{pleural\_effusion} & 3 \\
+\texttt{pulmonary\_metastases} & 1 \\
+\texttt{hemithorax\_opacification} & 1 \\
+\texttt{bullae} & 1 \\
+\end{longtable}
+
+
+\begin{lstlisting}[language=Python, caption={Algoritmo de muestreo controlado por prioridad de minorías (Greedy Minority-First).}, captionpos=b, label={code:balanceo_greedy}]
+# 1. Cálculo de frecuencias globales y ordenamiento por rareza
+frecuencias_globales = Counter(tag for tags in labels_data.values() for tag in tags)
+
+pacientes_procesados = []
+for paciente, tags in labels_data.items():
+    tags_validos = [t for t in tags if frecuencias_globales[t] >= MIN_APARICIONES]
+    if tags_validos:
+        # Asigna un puntaje de rareza basado en el tag menos frecuente del paciente
+        rareza_score = min(frecuencias_globales[t] for t in tags_validos)
+        pacientes_procesados.append((paciente, tags_validos, rareza_score))
+
+# 2. Selección prioritaria de los pacientes más raros hasta cubrir el objetivo
+pacientes_ordenados = sorted(pacientes_procesados, key=lambda x: x[2])
+conteo_actual = {tag: 0 for tag in tags_validos}
+pacientes_seleccionados = set()
+
+for paciente, tags_del_paciente, _ in pacientes_ordenados:
+    if any(conteo_actual[t] < OBJETIVO_POR_TAG for t in tags_del_paciente):
+        pacientes_seleccionados.add(paciente)
+        for t in tags_del_paciente:
+            conteo_actual[t] += 1
+\end{lstlisting}
+
+\begin{longtable}{lr}
+\hline
+\textbf{Etiqueta Clínica (Tag)} & \textbf{Frecuencia Absoluta ($N$)} \\ \hline
+\endfirsthead
+
+\multicolumn{2}{c}{\textit{(Continuación de la página anterior)}} \\ \hline
+\textbf{Etiqueta Clínica (Tag)} & \textbf{Frecuencia Absoluta ($N$)} \\ \hline
+\endhead
+
+\hline \multicolumn{2}{r}{\textit{(Continúa en la siguiente página)}} \\
+\endfoot
+
+\hline
+\textbf{Total de apariciones} & \textbf{741} \\ \hline
+\caption{Distribución de frecuencias tras aplicar el algoritmo de balanceo controlado de tags ($N = 385$ pacientes).}
+\label{tab:apendice_tags_balanceados} 
+\endlastfoot
+
+\texttt{aortic\_uncoiling} & 157 \\
+\texttt{aortic\_calcification} & 65 \\
+\texttt{vertebral\_compression\_deformity} & 37 \\
+\texttt{tracheobronchial\_calcification} & 36 \\
+\texttt{medical\_device} & 36 \\
+\texttt{pleural\_adhesions} & 35 \\
+\texttt{cardiomegaly} & 33 \\
+\texttt{costophrenic\_blunting} & 33 \\
+\texttt{pulmonary\_fibrotic\_sequelae} & 33 \\
+\texttt{postsurgical\_changes} & 32 \\
+\texttt{interstitial\_abnormality} & 32 \\
+\texttt{scoliosis} & 31 \\
+\texttt{pulmonary\_calcifications} & 30 \\
+\texttt{normal} & 30 \\
+\texttt{borderline\_cardiac\_size} & 30 \\
+\texttt{breast\_implants} & 30 \\
+\texttt{alveolar\_condensation\_or\_airspace\_opacity} & 30 \\
+\texttt{hemidiaphragm\_elevation} & 9 \\
+\texttt{atelectasis} & 7 \\
+\texttt{pulmonary\_nodule} & 4 \\
+\texttt{hiatal\_hernia} & 4 \\
+\texttt{nonspecific\_basal\_opacity} & 3 \\
+\texttt{pleural\_effusion} & 2 \\
+\texttt{emphysema} & 1 \\
+\texttt{rib\_fracture} & 1 \\
+\end{longtable}
+\clearpage %
+
+\begin{table}[htbp]
+\centering
+\small
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{lrrrrrrrrr}
+\toprule
+\textbf{Etiqueta} & \textbf{Real} & \textbf{Pred} & \textbf{TP} & \textbf{FP} & \textbf{FN} & \textbf{Prec} & \textbf{Recall} & \textbf{F1} \\
+\midrule
+aortic\_uncoiling & 1200 & 88 & 48 & 40 & 1152 & 0.545 & 0.040 & 0.075 \\
+normal & 971 & 2548 & 953 & 1595 & 18 & 0.374 & 0.981 & 0.542 \\
+aortic\_calcification & 413 & 14 & 7 & 7 & 406 & 0.500 & 0.017 & 0.033 \\
+breast\_implants & 176 & 1 & 1 & 0 & 175 & 1.000 & 0.006 & 0.011 \\
+cardiomegaly & 160 & 20 & 3 & 17 & 157 & 0.150 & 0.019 & 0.033 \\
+borderline\_cardiac\_size & 152 & 216 & 19 & 197 & 133 & 0.088 & 0.125 & 0.103 \\
+postsurgical\_changes & 67 & 17 & 14 & 3 & 53 & 0.824 & 0.209 & 0.333 \\
+costophrenic\_blunting & 51 & 4 & 0 & 4 & 51 & 0.000 & 0.000 & 0.000 \\
+vertebral\_compression\_deformity & 50 & 1 & 0 & 1 & 50 & 0.000 & 0.000 & 0.000 \\
+pleural\_adhesions & 40 & 1 & 0 & 1 & 40 & 0.000 & 0.000 & 0.000 \\
+pulmonary\_calcifications & 38 & 1 & 0 & 1 & 38 & 0.000 & 0.000 & 0.000 \\
+pulmonary\_fibrotic\_sequelae & 38 & 1 & 1 & 0 & 37 & 1.000 & 0.026 & 0.051 \\
+medical\_device & 37 & 17 & 12 & 5 & 25 & 0.706 & 0.324 & 0.444 \\
+scoliosis & 32 & 4 & 1 & 3 & 31 & 0.250 & 0.031 & 0.056 \\
+pulmonary\_nodule & 20 & 1 & 0 & 1 & 20 & 0.000 & 0.000 & 0.000 \\
+emphysema & 16 & 1 & 0 & 1 & 16 & 0.000 & 0.000 & 0.000 \\
+nonspecific\_basal\_opacity & 6 & 12 & 1 & 11 & 5 & 0.083 & 0.167 & 0.111 \\
+pulmonary\_congestion & 5 & 2 & 0 & 2 & 5 & 0.000 & 0.000 & 0.000 \\
+hemithorax\_opacification & 1 & 1 & 0 & 1 & 1 & 0.000 & 0.000 & 0.000 \\
+\midrule
+Otras 13 patologías sin predicciones$^{\dagger}$ & 264 & 0 & 0 & 0 & 264 & 0.000 & 0.000 & 0.000 \\
+\bottomrule
+\end{tabular}
+\caption{Desempeño por etiqueta para \texttt{medgemma\_4b\_q6} (clases con predicciones activas).}
+\label{tab:q6_per_tag}
+\vspace{0.5ex}
+\raggedright \footnotesize \textit{Nota:} $^{\dagger}$Agrupa las 13 etiquetas en las que el modelo no generó ninguna predicción ($\text{Pred} = 0$), incluyendo \textit{atelectasis}, \textit{pneumothorax}, \textit{pleural\_effusion}, \textit{interstitial\_abnormality}, \textit{hiatal\_hernia}, entre otras.
+\end{table}
+
+
+\begin{table}[htbp]
+\centering
+\caption{Desempeño por etiqueta para \texttt{medgemma\_latest} (clases con predicciones activas).}
+\label{tab:latest_per_tag}
+\small
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{lrrrrrrrrr}
+\toprule
+\textbf{Etiqueta} & \textbf{Real} & \textbf{Pred} & \textbf{TP} & \textbf{FP} & \textbf{FN} & \textbf{Prec} & \textbf{Recall} & \textbf{F1} \\
+\midrule
+aortic\_uncoiling & 1200 & 42 & 29 & 13 & 1171 & 0.690 & 0.024 & 0.047 \\
+normal & 971 & 2513 & 938 & 1575 & 33 & 0.373 & 0.966 & 0.538 \\
+cardiomegaly & 160 & 17 & 5 & 12 & 155 & 0.294 & 0.031 & 0.056 \\
+borderline\_cardiac\_size & 152 & 251 & 22 & 229 & 130 & 0.088 & 0.145 & 0.109 \\
+postsurgical\_changes & 67 & 10 & 8 & 2 & 59 & 0.800 & 0.119 & 0.208 \\
+tracheobronchial\_calcification & 51 & 1 & 0 & 1 & 51 & 0.000 & 0.000 & 0.000 \\
+vertebral\_compression\_deformity & 50 & 1 & 0 & 1 & 50 & 0.000 & 0.000 & 0.000 \\
+medical\_device & 37 & 22 & 15 & 7 & 22 & 0.682 & 0.405 & 0.508 \\
+scoliosis & 32 & 5 & 3 & 2 & 29 & 0.600 & 0.094 & 0.162 \\
+pulmonary\_nodule & 20 & 1 & 0 & 1 & 20 & 0.000 & 0.000 & 0.000 \\
+emphysema & 16 & 1 & 0 & 1 & 16 & 0.000 & 0.000 & 0.000 \\
+nonspecific\_basal\_opacity & 6 & 7 & 1 & 6 & 5 & 0.143 & 0.167 & 0.154 \\
+pulmonary\_congestion & 5 & 1 & 0 & 1 & 5 & 0.000 & 0.000 & 0.000 \\
+\midrule
+Otras 19 patologías sin predicciones$^{\dagger}$ & 970 & 0 & 0 & 0 & 970 & 0.000 & 0.000 & 0.000 \\
+\bottomrule
+\end{tabular}
+\\[1ex]
+\raggedright \textit{Nota:} $^{\dagger}$Agrupa las 19 etiquetas en las que el modelo no generó ninguna predicción ($\text{Pred} = 0$), incluyendo \textit{aortic\_calcification}, \textit{breast\_implants}, \textit{atelectasis}, \textit{pneumothorax}, \textit{pleural\_effusion}, entre otras.
+\end{table}
+
+
+\end{document}
